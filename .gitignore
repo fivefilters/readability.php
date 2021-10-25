@@ -3,3 +3,4 @@ vendor
 composer.lock
 /test.*
 /test/changed/
+.phpunit.result.cache

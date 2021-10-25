@@ -8,7 +8,7 @@ class DOMDocument extends \DOMDocument
 {
     use NodeTrait;
 
-    public function __construct($version, $encoding)
+    public function __construct($version = "1.0", $encoding = "")
     {
         parent::__construct($version, $encoding);
 
