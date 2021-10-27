@@ -2303,7 +2303,10 @@ class Readability
     public function getContent()
     {
         if ($this->content instanceof DOMDocument) {
-            return Parser::serialize($this->content);
+            $config = new ParserConfig;
+            $config->serializeForeignVoidEndTags = false;
+            $config->serializeBooleanAttributeValues = false;
+            return Parser::serialize($this->content, $config);
         } else {
             return null;
         }

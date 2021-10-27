@@ -32,7 +32,7 @@
         "ext-xml": "*",
         "ext-mbstring": "*",
         "psr/log": "^1.0",
-        "mensbeam/html-parser": "^1.1.1",
+        "mensbeam/html-parser": "dev-master",
         "league/uri": "^6.4"
     },
     "require-dev": {
