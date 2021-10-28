@@ -1846,7 +1846,7 @@ class Readability
      **/
     public function _cleanStyles($node)
     {
-        if (property_exists($node, 'tagName') && $node->tagName === 'svg') {
+        if (property_exists($node, 'localName') && $node->localName === 'svg' && property_exists($node, 'namespaceURI') && $node->namespaceURI === 'http://www.w3.org/2000/svg') {
             return;
         }
 
