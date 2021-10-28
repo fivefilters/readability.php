@@ -293,6 +293,7 @@ class Readability
             $this->logger->debug('[Loading] Using HTML5 parser...');
             $config = new ParserConfig();
             $config->documentClass = DOMDocument::class;
+            $config->encodingFallback = "UTF-8";
             $dom = Parser::parse($html, "", $config)->document;
             //TODO: Improve this so it looks inside <html><head><base>, not just any <base>
             $base = $dom->getElementsByTagName('base');
