@@ -8,9 +8,10 @@ use fivefilters\Readability\Nodes\DOM\DOMNode;
 use fivefilters\Readability\Nodes\DOM\DOMText;
 use fivefilters\Readability\Nodes\NodeUtility;
 use Psr\Log\LoggerInterface;
-use \Masterminds\HTML5;
 use League\Uri\Http;
 use League\Uri\UriResolver;
+use MensBeam\HTML\Parser;
+use MensBeam\HTML\Parser\Config as ParserConfig;
 
 /**
  * Class Readability.
@@ -291,48 +292,52 @@ class Readability
     {
         $this->logger->debug('[Loading] Loading HTML...');
 
-        // To avoid throwing a gazillion of errors on malformed HTMLs
-        libxml_use_internal_errors(true);
-
         //$html = preg_replace('/(<br[^>]*>[ \n\r\t]*){2,}/i', '</p><p>', $html);
 
         if ($this->configuration->getParser() === 'html5') {
             $this->logger->debug('[Loading] Using HTML5 parser...');
-            $html5 = new HTML5(['disable_html_ns' => true, 'target_document' => new DOMDocument('1.0', 'utf-8')]);
-            $dom = $html5->loadHTML($html);
+            $config = new ParserConfig();
+            $config->documentClass = DOMDocument::class;
+            $config->encodingFallback = "UTF-8";
+            $dom = Parser::parse($html, "", $config)->document;
             //TODO: Improve this so it looks inside <html><head><base>, not just any <base>
             $base = $dom->getElementsByTagName('base');
             if ($base->length > 0) {
-                $base = $base->item(0);
-                $base = $base->getAttribute('href');
+                $base = $base->item(0)->getAttribute('href');
                 if ($base != '') {
                     $this->baseURI = $base;
                 }
             }
         } else {
             $this->logger->debug('[Loading] Using libxml parser...');
-            $dom = new DOMDocument('1.0', 'utf-8');
-            if ($this->configuration->getNormalizeEntities()) {
-                $this->logger->debug('[Loading] Normalized entities via mb_convert_encoding.');
-                // Replace UTF-8 characters with the HTML Entity equivalent. Useful to fix html with mixed content
-                $html = mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8');
+            // To avoid throwing a gazillion of errors on malformed HTMLs
+            $libxml_err = libxml_use_internal_errors(true);
+            try {
+                $dom = new DOMDocument('1.0', 'utf-8');
+                if ($this->configuration->getNormalizeEntities()) {
+                    $this->logger->debug('[Loading] Normalized entities via mb_convert_encoding.');
+                    // Replace UTF-8 characters with the HTML Entity equivalent. Useful to fix html with mixed content
+                    $html = mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8');
+                }
+                if (!$this->configuration->getSubstituteEntities()) {
+                    // Keep the original HTML entities
+                    $dom->substituteEntities = false;
+                }
+                if ($this->configuration->getSummonCthulhu()) {
+                    $this->logger->debug('[Loading] Removed script tags via regex H̶͈̩̟̬̱͠E̡̨̬͔̳̜͢͠ ̡̧̯͉̩͙̩̹̞̠͎͈̹̥̠͞ͅͅC̶͉̞̘̖̝̗͓̬̯͍͉̤̬͢͢͞Ò̟̘͉͖͎͉̱̭̣̕M̴̯͈̻̱̱̣̗͈̠̙̲̥͘͞E̷̛͙̼̲͍͕̹͍͇̗̻̬̮̭̱̥͢Ş̛̟͔̙̜̤͇̮͍̙̝̀͘');
+                    $html = preg_replace('/<script\b[^>]*>([\s\S]*?)<\/script>/', '', $html);
+                }
+
+                // Prepend the XML tag to avoid having issues with special characters. Should be harmless.
+                $dom->loadHTML('<?xml encoding="UTF-8">' . $html);
+                $this->baseURI = $dom->baseURI;
+            } finally {
+                if (!$libxml_err) {
+                    libxml_clear_errors();
+                    libxml_use_internal_errors(false);
+                }
             }
-        }
 
-        if (!$this->configuration->getSubstituteEntities()) {
-            // Keep the original HTML entities
-            $dom->substituteEntities = false;
-        }
-
-        if ($this->configuration->getSummonCthulhu()) {
-            $this->logger->debug('[Loading] Removed script tags via regex H̶͈̩̟̬̱͠E̡̨̬͔̳̜͢͠ ̡̧̯͉̩͙̩̹̞̠͎͈̹̥̠͞ͅͅC̶͉̞̘̖̝̗͓̬̯͍͉̤̬͢͢͞Ò̟̘͉͖͎͉̱̭̣̕M̴̯͈̻̱̱̣̗͈̠̙̲̥͘͞E̷̛͙̼̲͍͕̹͍͇̗̻̬̮̭̱̥͢Ş̛̟͔̙̜̤͇̮͍̙̝̀͘');
-            $html = preg_replace('/<script\b[^>]*>([\s\S]*?)<\/script>/', '', $html);
-        }
-
-        // Prepend the XML tag to avoid having issues with special characters. Should be harmless.
-        if ($this->configuration->getParser() !== 'html5') {
-            $dom->loadHTML('<?xml encoding="UTF-8">' . $html);
-            $this->baseURI = $dom->baseURI;
         }
         $dom->encoding = 'UTF-8';
 
@@ -345,6 +350,11 @@ class Readability
         $this->removeScripts($dom);
 
         $this->prepDocument($dom);
+
+        // remove any DOCTYPE so that it is not later printed
+        if ($dom->doctype) {
+            $dom->removeChild($dom->doctype);
+        }
 
         $this->logger->debug('[Loading] Loaded HTML successfully.');
 
@@ -1842,7 +1852,7 @@ class Readability
      **/
     public function _cleanStyles($node)
     {
-        if (property_exists($node, 'tagName') && $node->tagName === 'svg') {
+        if (property_exists($node, 'localName') && $node->localName === 'svg' && property_exists($node, 'namespaceURI') && $node->namespaceURI === 'http://www.w3.org/2000/svg') {
             return;
         }
 
@@ -2303,10 +2313,10 @@ class Readability
     public function getContent()
     {
         if ($this->content instanceof DOMDocument) {
-            $html5 = new HTML5(['disable_html_ns' => true]);
-            // by using childNodes below we make sure HTML5PHP's serialiser
-            // doesn't output the <!DOCTYPE html> string at the start.
-            return $html5->saveHTML($this->content->childNodes);
+            $config = new ParserConfig;
+            $config->serializeForeignVoidEndTags = false;
+            $config->serializeBooleanAttributeValues = false;
+            return Parser::serialize($this->content, $config);
         } else {
             return null;
         }
