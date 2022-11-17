@@ -1,8 +1,6 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## Unreleased
-
 ## [v3.1.0](https://github.com/fivefilters/readability.php/releases/tag/v3.1.0)
 - Minimum PHP version 7.4 (composer.json updated)
 - Updated the Docker file to support versions of PHP from 7.4 to 8.1
