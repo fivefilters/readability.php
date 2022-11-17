@@ -3,6 +3,20 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## [v3.1.0](https://github.com/fivefilters/readability.php/releases/tag/v3.1.0)
+- Minimum PHP version 7.4 (composer.json updated)
+- Updated the Docker file to support versions of PHP from 7.4 to 8.1
+- Updated the Docker file to allow you to run PHP with libxml 2.9.10, 2.9.13, 2.9.14
+- Test with PHP 8.1
+
+## [v3.0.0](https://github.com/fivefilters/readability.php/releases/tag/v3.0.0)
+- Implemented changes made to Readability.js up to 26 August 2021, with the exception of a [piece of code](https://github.com/fivefilters/readability.php/commit/1c662465bded2ab3acf3b975a1315c8c45f0bf73#diff-b9b31807b1a39caec18ddc293e9c52931ba8b55191c61e6b77a623d699a599ffR1899) which doesn't produce the same results in PHP for us compard to the JS version.
+- Default parser is now HTML5-PHP, which handles HTML better than libxml
+- Replaced the expected HTML files in the tests folder to reflect HTML5-PHP's serialisation
+- Updated the Docker file to support versions of PHP from 7.3 to 8.0 (previously it was 7.0 to 7.3)
+- Updated the Docker file to allow you to run PHP with libxml 2.9.4, 2.9.5, 2.9.10, and 2.9.12
+- Fatal error bug fix (thanks Balazsp)
+
 ## [v2.1.0](https://github.com/andreskrey/readability.php/releases/tag/v2.1.0)
 - Avoid overwriting extracted metadata with similarly named keys (like `og:image` and `og:image:width`)
 - Imported new `getSiteName()` feature from JS version as of [21 Dec 2018](https://github.com/mozilla/readability/pull/504)

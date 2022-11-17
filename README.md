@@ -30,7 +30,7 @@ Version 2.1.0 - Up to date with Readability.js up to [19 Nov 2018](https://githu
 
 ## Requirements
 
-PHP 7.3+, ext-dom, ext-xml, and ext-mbstring. To install these dependencies (in the rare case your system does not have them already), you could try something like this in *nix like environments:
+PHP 7.4+, ext-dom, ext-xml, and ext-mbstring. To install these dependencies (in the rare case your system does not have them already), you could try something like this in *nix like environments:
 
 `$ sudo apt-get install php7.4-xml php7.4-mbstring`
 
@@ -201,7 +201,7 @@ reader mode uses both of these techniques itself. Sanitizing unsafe content out 
 
 ## Testing
 
-Any version of PHP from 7.3 and above installed locally should be enough to develop new features and add new test cases. If you want to be 100% sure that your change doesn't create any issues with other versions of PHP, you can use the provided Docker containers to test currently in 7.3, 7.4, and 8.0.
+Any version of PHP from 7.4 and above installed locally should be enough to develop new features and add new test cases. If you want to be 100% sure that your change doesn't create any issues with other versions of PHP, you can use the provided Docker containers to test currently in 7.4, 8.0, 8.1.
 
 You'll need Docker and Docker Compose for this. To run all the tests in the three PHP versions above, just type the following command:
 
@@ -209,11 +209,11 @@ You'll need Docker and Docker Compose for this. To run all the tests in the thre
 make test-all
 ```
 
-This will start all the containers and run all the tests on every supported version of PHP. If you want to test against a specific version, you can use `make test-7.3`, `make test-7.4`, or `make test-8`.
+This will start all the containers and run all the tests on every supported version of PHP. If you want to test against a specific version, you can use `make test-7.4`, `make test-8.0`, or `make test-8.1`.
 
 ### Different versions of libxml
 
-If you want to test against supported versions of PHP *AND* multiple versions of libxml, run `test-all-versions`. This will test against PHP versions 7.3 to 8 and libxml versions 2.9.4, 2.9.5, 2.9.10, and 2.9.12. Normally you won't need to do this unless you think you've found a bug on an specific version of libxml.
+If you want to test against supported versions of PHP *AND* multiple versions of libxml, run `test-all-versions`. This will test against PHP versions 7.4 to 8.1 and libxml versions 2.9.10, 2.9.13 and 2.9.14. Normally you won't need to do this unless you think you've found a bug on an specific version of libxml.
 
 ### Updating the expected tests
 

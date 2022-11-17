@@ -1,100 +1,76 @@
 version: '3'
 
 services:
-  php-7.3-libxml-2.9.4: &template
+  php-7.4-libxml-2.9.10: &template
     build:
       context: ./docker/php
       args:
-        LIBXML_VERSION: 2.9.4
-        PHP_VERSION: 7.3
+        LIBXML_VERSION: 2.9.10
+        PHP_VERSION: 7.4
     volumes:
       - ./:/app
     tty: true
 
-  php-7.3-libxml-2.9.5:
+  php-7.4-libxml-2.9.13:
     <<: *template
     build:
       context: ./docker/php
       args:
-        LIBXML_VERSION: 2.9.5
-        PHP_VERSION: 7.3
+        LIBXML_VERSION: 2.9.13
+        PHP_VERSION: 7.4
 
-  php-7.3-libxml-2.9.10:
+  php-7.4-libxml-2.9.14:
+    <<: *template
+    build:
+      context: ./docker/php
+      args:
+        LIBXML_VERSION: 2.9.14
+        PHP_VERSION: 7.4
+
+  php-8.0-libxml-2.9.10:
     <<: *template
     build:
       context: ./docker/php
       args:
         LIBXML_VERSION: 2.9.10
-        PHP_VERSION: 7.3
+        PHP_VERSION: 8.0
 
-  php-7.3-libxml-2.9.12:
+  php-8.0-libxml-2.9.13:
     <<: *template
     build:
       context: ./docker/php
       args:
-        LIBXML_VERSION: 2.9.12
-        PHP_VERSION: 7.3
+        LIBXML_VERSION: 2.9.13
+        PHP_VERSION: 8.0
 
-  php-7.4-libxml-2.9.4:
+  php-8.0-libxml-2.9.14:
     <<: *template
     build:
       context: ./docker/php
       args:
-        LIBXML_VERSION: 2.9.4
-        PHP_VERSION: 7.4
+        LIBXML_VERSION: 2.9.14
+        PHP_VERSION: 8.0
 
-  php-7.4-libxml-2.9.5:
-    <<: *template
-    build:
-      context: ./docker/php
-      args:
-        LIBXML_VERSION: 2.9.5
-        PHP_VERSION: 7.4
-
-  php-7.4-libxml-2.9.10:
+  php-8.1-libxml-2.9.10:
     <<: *template
     build:
       context: ./docker/php
       args:
         LIBXML_VERSION: 2.9.10
-        PHP_VERSION: 7.4
+        PHP_VERSION: 8.1
 
-  php-7.4-libxml-2.9.12:
+  php-8.1-libxml-2.9.13:
     <<: *template
     build:
       context: ./docker/php
       args:
-        LIBXML_VERSION: 2.9.12
-        PHP_VERSION: 7.4
+        LIBXML_VERSION: 2.9.13
+        PHP_VERSION: 8.1
 
-  php-8-libxml-2.9.4:
+  php-8.1-libxml-2.9.14:
     <<: *template
     build:
       context: ./docker/php
       args:
-        LIBXML_VERSION: 2.9.4
-        PHP_VERSION: 8
-
-  php-8-libxml-2.9.5:
-    <<: *template
-    build:
-      context: ./docker/php
-      args:
-        LIBXML_VERSION: 2.9.5
-        PHP_VERSION: 8
-
-  php-8-libxml-2.9.10:
-    <<: *template
-    build:
-      context: ./docker/php
-      args:
-        LIBXML_VERSION: 2.9.10
-        PHP_VERSION: 8
-
-  php-8-libxml-2.9.12:
-    <<: *template
-    build:
-      context: ./docker/php
-      args:
-        LIBXML_VERSION: 2.9.12
-        PHP_VERSION: 8
+        LIBXML_VERSION: 2.9.14
+        PHP_VERSION: 8.1

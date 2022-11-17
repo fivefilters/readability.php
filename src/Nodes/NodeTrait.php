@@ -167,7 +167,7 @@ trait NodeTrait
      *
      * @return string
      */
-    public function getAttribute($attributeName)
+    public function getAttribute($attributeName): string
     {
         if (!is_null($this->attributes)) {
             return parent::getAttribute($attributeName);
@@ -185,7 +185,7 @@ trait NodeTrait
      *
      * @see getAttribute
      */
-    public function hasAttribute($attributeName)
+    public function hasAttribute($attributeName): bool
     {
         if (!is_null($this->attributes)) {
             return parent::hasAttribute($attributeName);
@@ -201,7 +201,7 @@ trait NodeTrait
      *
      * @return array
      */
-    public function getNodeAncestors($maxLevel = 3)
+    public function getNodeAncestors($maxLevel = 3): array
     {
         $ancestors = [];
         $level = 0;
@@ -225,7 +225,7 @@ trait NodeTrait
      *
      * @return array
      */
-    public function getAllLinks()
+    public function getAllLinks(): array
     {
         return iterator_to_array($this->getElementsByTagName('a'));
     }
