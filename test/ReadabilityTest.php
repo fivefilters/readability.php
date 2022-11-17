@@ -6,6 +6,8 @@ use fivefilters\Readability\Configuration;
 use fivefilters\Readability\ParseException;
 use fivefilters\Readability\Readability;
 
+ini_set('memory_limit','1024M');
+
 /**
  * Class ReadabilityTest.
  */
