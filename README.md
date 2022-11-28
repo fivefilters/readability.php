@@ -1,15 +1,5 @@
 # Readability.php
 
-## News (August 2021)
-
-Andres Rey, the [original developer](https://github.com/andreskrey/readability.php) of Readability.php has kindly let us take over maintenance and development of the project.
-
-Please bear with us while we catch up with [Readability.js](https://github.com/mozilla/readability) changes. There'll be a new release (3.0.0) when we're ready.
-
-For the changes we've made so far in this repository, please see our [blog post](https://www.fivefilters.org/2021/readability/).
-
-## About
-
 [![Latest Stable Version](https://poser.pugx.org/fivefilters/readability.php/v/stable)](https://packagist.org/packages/fivefilters/readability.php) [![Tests](https://github.com/fivefilters/readability.php/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/fivefilters/readability.php/actions/workflows/main.yml)
 
 PHP port of *Mozilla's* **[Readability.js](https://github.com/mozilla/readability)**. Parses html text (usually news and other articles) and returns **title**, **author**, **main image** and **text content** without nav bars, ads, footers, or anything that isn't the main body of the text. Analyzes each node, gives them a score, and determines what's relevant and what can be discarded.
@@ -42,7 +32,7 @@ First you have to require the library using composer:
 
 Then, create a Readability class and pass a Configuration class, feed the `parse()` function with your HTML and echo the variable:
 
-```php 
+```php
 <?php
 require __DIR__ . '/vendor/autoload.php';
 use fivefilters\Readability\Readability;
@@ -178,7 +168,7 @@ Self closing tags like `<br />` get automatically expanded to `<br></br`. No way
 
 ## Dependencies
 
-Readability.php uses 
+Readability.php uses
 
  * [HTML5-PHP](https://github.com/Masterminds/html5-php) to parse and serialise HTML.
  * [PSR Log](https://github.com/php-fig/log) interface to define the allowed type of loggers. 
