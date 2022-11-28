@@ -205,6 +205,8 @@ reader mode uses both of these techniques itself. Sanitizing unsafe content out 
 
 Any version of PHP from 7.4 and above installed locally should be enough to develop new features and add new test cases. If you want to be 100% sure that your change doesn't create any issues with other versions of PHP, you can use the provided Docker containers to test currently in 7.4, 8.0, 8.1.
 
+If you use composer to download this this package, make sure you pass the `--prefer-source` flag, otherwise the `test/` folder won't be downloaded.
+
 You'll need Docker and Docker Compose for this. To run all the tests in the three PHP versions above, just type the following command:
 
 ```bash
@@ -232,7 +234,7 @@ Next, create a folder in tests/ called /changed, then run the following command 
 The two environment variables (`output-changes=1` and `output-diff=1`) will result in new output for any failing test (along with a diff of changes) being written to the changed/ folder.
 
 If you're happy the changes are okay, set `output-diff=0` and the diff files will no longer be written, making it easier to copy the new expected output files over to their corresponding locations in test-pages\.
- 
+
 ## License
 
 Based on Arc90's readability.js (1.7.1) script available at: http://code.google.com/p/arc90labs-readability
