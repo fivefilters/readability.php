@@ -1078,7 +1078,7 @@ class Readability
         }, $str);
         $str = preg_replace_callback('/&#(?:x([0-9a-z]{1,4})|([0-9]{1,4}));/i', function ($matches) {
             $hex = $matches[1];
-            $numStr = $matches[2];
+            $numStr = $matches[2] ?? '0';
             if ($hex !== '') {
                 $num = intval($hex, 16);
             } else {
