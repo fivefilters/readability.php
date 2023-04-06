@@ -6,9 +6,9 @@ name: CI
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -30,13 +30,17 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      # Runs a single command using the runners shell
-      #- name: Run a one-line script
-      #  run: echo Hello, world!
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{matrix.php}}
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install
 
       # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - name: Run tests
         run: |
-          composer install
           docker build --build-arg PHP_VERSION=${{matrix.php}} --build-arg LIBXML_VERSION=${{matrix.libxml}} -t gh-action - < ./docker/php/Dockerfile
           docker run --volume $PWD:/app --workdir="/app" --env XDEBUG_MODE=coverage gh-action php ./vendor/bin/phpunit --coverage-clover /app/test/clover.xml
