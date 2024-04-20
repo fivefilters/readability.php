@@ -9,7 +9,11 @@ use fivefilters\Readability\Nodes\DOM\DOMText;
 use DOMNodeList;
 
 /**
- * @method \DOMNode removeAttribute($name)
+ * @property ?DOMNode $firstChild
+ * @property ?DOMNode $lastChild
+ * @property ?DOMNode $parentNode
+ * @property ?DOMNode $nextSibling
+ * @property ?DOMNode $previousSibling
  */
 trait NodeTrait
 {
@@ -525,7 +529,6 @@ trait NodeTrait
      */
     public function shiftingAwareGetElementsByTagName($tag)
     {
-        /** @var $nodes DOMNodeList */
         $nodes = $this->getElementsByTagName($tag);
         $count = $nodes->length;
 
@@ -547,13 +550,13 @@ trait NodeTrait
      * Mimics JS's firstElementChild property. PHP only has firstChild which could be any type of DOMNode. Use this
      * function to get the first one that is an DOMElement node.
      *
-     * @return \DOMElement|null
+     * @return DOMElement|null
      */
     public function getFirstElementChild()
     {
         if ($this->childNodes instanceof \Traversable) {
             foreach ($this->childNodes as $node) {
-                if ($node instanceof \DOMElement) {
+                if ($node instanceof DOMElement) {
                     return $node;
                 }
             }

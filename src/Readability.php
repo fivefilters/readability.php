@@ -300,7 +300,7 @@ class Readability
      *
      * @param string $html
      */
-    public function loadHTML(string $html)
+    public function loadHTML(string $html): void
     {
         $this->logger->debug('[Loading] Loading HTML...');
 
@@ -378,7 +378,7 @@ class Readability
                 if (
                     !isset($parsed['@context']) ||
                     !is_string($parsed['@context']) ||
-                    !preg_match('/^https?\:\/\/schema\.org$/', $parsed['@context'])
+                    !preg_match('/^https?:\/\/schema\.org$/', $parsed['@context'])
                 ) {
                     return $metadata;
                 }
@@ -459,7 +459,7 @@ class Readability
         $propertyPattern = '/\s*(dc|dcterm|og|twitter)\s*:\s*(author|creator|description|title|image|site_name)(?!:)\s*/i';
 
         // name is a single value
-        $namePattern = '/^\s*(?:(dc|dcterm|og|twitter|weibo:(article|webpage))\s*[\.:]\s*)?(author|creator|description|title|image|site_name)(?!:)\s*$/i';
+        $namePattern = '/^\s*(?:(dc|dcterm|og|twitter|weibo:(article|webpage))\s*[.:]\s*)?(author|creator|description|title|image|site_name)(?!:)\s*$/i';
 
         // Find description tags.
         foreach ($this->dom->getElementsByTagName('meta') as $meta) {
@@ -576,10 +576,8 @@ class Readability
 
     /**
      * Returns all the images of the parsed article.
-     *
-     * @return array
      */
-    public function getImages()
+    public function getImages(): array
     {
         $result = [];
         if ($this->getImage()) {
@@ -598,13 +596,15 @@ class Readability
 
         if ($this->configuration->getFixRelativeURLs()) {
             foreach ($result as &$imgSrc) {
-                $imgSrc = $this->toAbsoluteURI($imgSrc);
+                try {
+                    $imgSrc = $this->toAbsoluteURI($imgSrc);
+                } catch (\Exception $err) {
+                    // Invalid URL, leave as is
+                }
             }
         }
 
-        $result = array_unique(array_filter($result));
-
-        return $result;
+        return array_unique(array_filter($result));
     }
 
     /**
@@ -634,7 +634,11 @@ class Readability
         }
 
         if (!empty($imgUrl) && $this->configuration->getFixRelativeURLs()) {
-            $this->setImage($this->toAbsoluteURI($imgUrl));
+            try {
+                $this->setImage($this->toAbsoluteURI($imgUrl));
+            } catch (\Exception $err) {
+                // Invalid URL, leave as is
+            }
         }
     }
 
@@ -651,6 +655,7 @@ class Readability
     
         while ($node) {
             if ($node->parentNode && in_array($node->nodeName, ['div', 'section']) && !($node->hasAttribute('id') && strpos($node->getAttribute('id'), 'readability') === 0)) {
+                /** @var DOMElement $node */
                 if ($node->isElementWithoutContent()) {
                     $node = NodeUtility::removeAndGetNext($node);
                     continue;
@@ -702,9 +707,9 @@ class Readability
          * Sanity warning: if you eval this match in PHPStorm's "Evaluate expression" box, it will return false
          * I can assure you it works properly if you let the code run.
          */
-        if (preg_match('/ [\|\-\\\\\/>»] /i', $curTitle)) {
+        if (preg_match('/ [|\-\\\\\/>»] /i', $curTitle)) {
             $titleHadHierarchicalSeparators = (bool) preg_match('/ [\\\\\/>»] /', $curTitle);
-            $curTitle = preg_replace('/(.*)[\|\-\\\\\/>»] .*/i', '$1', $originalTitle);
+            $curTitle = preg_replace('/(.*)[|\-\\\\\/>»] .*/i', '$1', $originalTitle);
 
             $this->logger->info(sprintf('[Metadata] Found hierarchical separators in title, new title is: \'%s\'', $curTitle));
 
@@ -787,7 +792,7 @@ class Readability
         $uri = trim($uri);
 
         // If this is already an absolute URI, return it.
-        if (preg_match('/^[a-zA-Z][a-zA-Z0-9\+\-\.]*:/', $uri)) {
+        if (preg_match('/^[a-zA-Z][a-zA-Z0-9+\-.]*:/', $uri)) {
             return $uri;
         }
 
@@ -955,6 +960,7 @@ class Readability
                             $p->appendChild($childNode);
                         }
                     } elseif ($p !== null) {
+                        /** @var DOMNode $p */
                         while ($p->lastChild && $p->lastChild->isWhitespace()) {
                             $p->removeChild($p->lastChild);
                         }
@@ -1210,7 +1216,7 @@ class Readability
      *
      * @param DOMDocument $dom
      */
-    private function prepDocument(DOMDocument $dom)
+    private function prepDocument(DOMDocument $dom): void
     {
         $this->logger->info('[PrepDocument] Preparing document for parsing...');
 
@@ -1244,6 +1250,7 @@ class Readability
              */
 
             if ($replaced) {
+                /** @var DOMElement $p */
                 $p = $dom->createElement('p');
                 $br->parentNode->replaceChild($p, $br);
 
@@ -1682,7 +1689,7 @@ class Readability
 
         // Remove single-cell tables
         foreach ($article->shiftingAwareGetElementsByTagName('table') as $table) {
-            /** @var DOMNode $table */
+            /** @var DOMElement $table */
             $tbody = $table->hasSingleTagInsideElement('tbody') ? $table->getFirstElementChild() : $table;
             if ($tbody->hasSingleTagInsideElement('tr')) {
                 $row = $tbody->getFirstElementChild();
@@ -2233,20 +2240,32 @@ class Readability
                 if ($src) {
                     $this->logger->debug(sprintf('[PostProcess] Converting image URL to absolute URI: \'%s\'', substr($src, 0, 128)));
 
-                    $media->setAttribute('src', $this->toAbsoluteURI($src));
+                    try {
+                        $media->setAttribute('src', $this->toAbsoluteURI($src));
+                    } catch (\Exception $err) {
+                        $this->logger->debug('[PostProcess] Invalid URL encountered');
+                    }
                 }
         
                 if ($poster) {
                     $this->logger->debug(sprintf('[PostProcess] Converting image URL to absolute URI: \'%s\'', substr($poster, 0, 128)));
 
-                    $media->setAttribute('poster', $this->toAbsoluteURI($poster));
+                    try {
+                        $media->setAttribute('poster', $this->toAbsoluteURI($poster));
+                    } catch (\Exception $err) {
+                        $this->logger->debug('[PostProcess] Invalid URL encountered');
+                    }
+
                 }
         
                 if ($srcset) {
                     $newSrcset = preg_replace_callback(NodeUtility::$regexps['srcsetUrl'], function ($matches) {
                         $this->logger->debug(sprintf('[PostProcess] Converting image URL to absolute URI: \'%s\'', substr($matches[1], 0, 128)));
-
-                        return $this->toAbsoluteURI($matches[1]) . $matches[2] . $matches[3];
+                        try {
+                            return $this->toAbsoluteURI($matches[1]) . $matches[2] . $matches[3];
+                        } catch (\Exception $err) {
+                            return $matches[1] . $matches[2] . $matches[3];
+                        }
                     }, $srcset);
             
                     $media->setAttribute('srcset', $newSrcset);
@@ -2267,8 +2286,8 @@ class Readability
      * Iterate over a NodeList, and return the first node that passes
      * the supplied test function
      *
-     * @param  NodeList nodeList The NodeList.
-     * @param  Function fn       The test function.
+     * @param  array nodeList The NodeList.
+     * @param  callable fn    The test function.
      * @return DOMNode|null
      */
     private function findNode(array $nodeList, callable $fn)
