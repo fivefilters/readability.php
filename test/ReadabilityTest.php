@@ -149,7 +149,7 @@ class ReadabilityTest extends \PHPUnit\Framework\TestCase
      *
      * @return \Generator
      */
-    public function getSamplePages()
+    public static function getSamplePages()
     {
         $path = pathinfo(__FILE__, PATHINFO_DIRNAME) . DIRECTORY_SEPARATOR . 'test-pages';
         $testPages = scandir($path);

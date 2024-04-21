@@ -9,8 +9,7 @@ use fivefilters\Readability\Nodes\DOM\DOMText;
 use fivefilters\Readability\Nodes\NodeUtility;
 use Psr\Log\LoggerInterface;
 use Masterminds\HTML5;
-use League\Uri\Http;
-use League\Uri\UriResolver;
+use League\Uri\BaseUri;
 
 /**
  * Class Readability.
@@ -409,31 +408,18 @@ class Readability
                 if (isset($parsed['author'])) {
                     if (isset($parsed['author']['name']) && is_string($parsed['author']['name'])) {
                         $metadata['byline'] = trim($parsed['author']['name']);
-                    } elseif (
-                        is_array($parsed['author']) && 
-                        isset($parsed['author'][0]) && 
-                        is_array($parsed['author'][0]) && 
-                        isset($parsed['author'][0]['name']) && 
-                        is_string($parsed['author'][0]['name'])
-                    ) {
+                    } elseif (is_array($parsed['author']) && is_string($parsed['author'][0]['name'] ?? null)) {
                         $metadata['byline'] = array_filter($parsed['author'], function ($author) {
-                            return is_array($author) && isset($author['name']) && is_string($author['name']);
+                            return is_array($author) && is_string($author['name'] ?? null);
                         });
-                        $metadata['byline'] = array_map(function ($author) {
-                            return trim($author['name']);
-                        }, $metadata['byline']);
+                        $metadata['byline'] = array_map(fn($author) => trim($author['name']), $metadata['byline']);
                         $metadata['byline'] = implode(', ', $metadata['byline']);
                     }
                 }
                 if (isset($parsed['description']) && is_string($parsed['description'])) {
                     $metadata['excerpt'] = trim($parsed['description']);
                 }
-                if (
-                    isset($parsed['publisher']) &&
-                    is_array($parsed['publisher']) &&
-                    isset($parsed['publisher']['name']) &&
-                    is_string($parsed['publisher']['name'])
-                ) {
+                if (is_array($parsed['publisher'] ?? null) && is_string($parsed['publisher']['name'] ?? null)) {
                     $metadata['siteName'] = trim($parsed['publisher']['name']);
                 }
                 return $metadata;
@@ -527,7 +513,7 @@ class Readability
         if (isset($this->jsonld['byline'])) {
             $this->setAuthor($this->jsonld['byline']);
         } else {
-            $this->setAuthor(isset($values[$key]) ? $values[$key] : null);
+            $this->setAuthor($values[$key] ?? null);
         }
 
         // get description
@@ -544,7 +530,7 @@ class Readability
         if (isset($this->jsonld['excerpt'])) {
             $this->setExcerpt($this->jsonld['excerpt']);
         } else {
-            $this->setExcerpt(isset($values[$key]) ? $values[$key] : null);
+            $this->setExcerpt($values[$key] ?? null);
         }
 
         // get main image
@@ -554,7 +540,7 @@ class Readability
             'twitter:image'
         ], array_keys($values)));
 
-        $this->setImage(isset($values[$key]) ? $values[$key] : null);
+        $this->setImage($values[$key] ?? null);
 
         $key = current(array_intersect([
             'og:site_name'
@@ -563,7 +549,7 @@ class Readability
         if (isset($this->jsonld['siteName'])) {
             $this->setSiteName($this->jsonld['siteName']);
         } else {
-            $this->setSiteName(isset($values[$key]) ? $values[$key] : null);
+            $this->setSiteName($values[$key] ?? null);
         }
 
         // in many sites the meta value is escaped with HTML entities,
@@ -816,9 +802,8 @@ class Readability
         //    return $pathBase . substr($uri, 2);
         //}
 
-        $baseUri = Http::createFromString($pathBase);
-        $relativeUri = Http::createFromString($uri);
-        return (string)UriResolver::resolve($relativeUri, $baseUri);
+        $baseUri = BaseUri::from($pathBase);
+        return (string) $baseUri->resolve($uri);
 
         // Standard relative URI; add entire path. pathBase already includes a
         // trailing "/".

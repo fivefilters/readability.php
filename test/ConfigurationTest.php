@@ -55,10 +55,10 @@ class ConfigurationTest extends \PHPUnit\Framework\TestCase
     /**
      * @return array
      */
-    public function getParams()
+    public static function getParams(): array
     {
         return [[
-            'All current parameters' => [
+            'params' => [
                 'maxTopCandidates' => 3,
                 'wordThreshold' => 500,
                 'charThreshold' => 500,
