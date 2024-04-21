@@ -599,7 +599,7 @@ class Readability
                 try {
                     $imgSrc = $this->toAbsoluteURI($imgSrc);
                 } catch (\Exception $err) {
-                    // Invalid URL, leave as is
+                    $imgSrc = '';
                 }
             }
         }
@@ -637,7 +637,7 @@ class Readability
             try {
                 $this->setImage($this->toAbsoluteURI($imgUrl));
             } catch (\Exception $err) {
-                // Invalid URL, leave as is
+                $this->setImage(null);
             }
         }
     }
@@ -2167,7 +2167,7 @@ class Readability
      * Readability.js has a special filter to avoid cleaning the classes that the algorithm adds. We don't add classes
      * here so no need to filter those.
      *
-     * @param DOMDocument|DOMNode $node
+     * @param DOMDocument|DOMNode|DOMElement $node
      *
      * @return void
      **/
@@ -2244,6 +2244,7 @@ class Readability
                         $media->setAttribute('src', $this->toAbsoluteURI($src));
                     } catch (\Exception $err) {
                         $this->logger->debug('[PostProcess] Invalid URL encountered');
+                        $media->setAttribute('src', '');
                     }
                 }
         
@@ -2254,6 +2255,7 @@ class Readability
                         $media->setAttribute('poster', $this->toAbsoluteURI($poster));
                     } catch (\Exception $err) {
                         $this->logger->debug('[PostProcess] Invalid URL encountered');
+                        $media->setAttribute('poster', '');
                     }
 
                 }
@@ -2264,6 +2266,7 @@ class Readability
                         try {
                             return $this->toAbsoluteURI($matches[1]) . $matches[2] . $matches[3];
                         } catch (\Exception $err) {
+                            // Leave as is
                             return $matches[1] . $matches[2] . $matches[3];
                         }
                     }, $srcset);
@@ -2377,17 +2380,17 @@ class Readability
     }
 
     /**
-     * @return string|null
+     * Get main image
      */
-    public function getImage()
+    public function getImage(): ?string
     {
         return $this->image;
     }
 
     /**
-     * @param string $image
+     * Set main image
      */
-    protected function setImage($image)
+    protected function setImage(?string $image)
     {
         $this->image = $image;
     }
