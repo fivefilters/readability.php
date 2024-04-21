@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [v3.1.7](https://github.com/fivefilters/readability.php/releases/tag/v3.1.7)
+- Fixes URL syntax errors when bad URLs are encountered when rewriting relative URLs - reported by @marcelklehr
+- Fixes PHP 8 deprecation notice when base URLs (used for rewriting relative URLs) don't have a path component - thanks to @blat and @Markus-GS
+
 ## [v3.1.6](https://github.com/fivefilters/readability.php/releases/tag/v3.1.6)
 - Avoid re-parsing source HTML when making multiple attempts to identify content in parse()
 
