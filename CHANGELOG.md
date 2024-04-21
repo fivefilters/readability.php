@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [v3.2.0](https://github.com/fivefilters/readability.php/releases/tag/v3.2.0)
+- Update dependencies to newer versions (League/URI version 7), to make it compatible with projects already relying on those versions
+- Minimum PHP version set to 8.1 (required by League/URI 7)
+- Update Docker tests to use PHP 8.1, 8.2 and 8.3
+
 ## [v3.1.7](https://github.com/fivefilters/readability.php/releases/tag/v3.1.7)
 - Fixes URL syntax errors when bad URLs are encountered when rewriting relative URLs - reported by @marcelklehr
 - Fixes PHP 8 deprecation notice when base URLs (used for rewriting relative URLs) don't have a path component - thanks to @blat and @Markus-GS
