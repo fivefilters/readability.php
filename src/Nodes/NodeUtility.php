@@ -105,7 +105,7 @@ class NodeUtility
     /**
      * Removes the current node and returns the next node to be parsed (child, sibling or parent).
      *
-     * @param DOMNode $node
+     * @param DOMNode|DOMElement $node
      *
      * @return DOMNode
      */
@@ -136,7 +136,7 @@ class NodeUtility
      * Returns the next node. First checks for children (if the flag allows it), then for siblings, and finally
      * for parents.
      *
-     * @param DOMNode|DOMElement $originalNode
+     * @param DOMNode|DOMElement|DOMDocument $originalNode
      * @param bool $ignoreSelfAndKids
      *
      * @return DOMNode
