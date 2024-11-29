@@ -40,7 +40,7 @@ class ReadabilityTest extends \PHPUnit\Framework\TestCase
         $readability_no_whitespace = preg_replace($from, $to, $readability->getContent());
 
         if (getenv('output-changes') && $expected_no_whitespace !== $readability_no_whitespace) {
-            @mkdir(__DIR__.'/changed/'.$testPage->getSlug());
+            @mkdir(__DIR__.'/changed/'.$testPage->getSlug(), 0777, true);
             $new_expected = __DIR__.'/changed/'.$testPage->getSlug().'/expected.html';
             $old_expected = __DIR__.'/test-pages/'.$testPage->getSlug().'/expected.html';
             //file_put_contents(__DIR__.'/changed/'.$testPage->getSlug().'/readability.html', $readability_no_whitespace);
@@ -86,7 +86,7 @@ class ReadabilityTest extends \PHPUnit\Framework\TestCase
         ];
 
         if (getenv('output-changes') && (array)$testPage->getExpectedMetadata() !== $metadata) {
-            @mkdir(__DIR__.'/changed/'.$testPage->getSlug());
+            @mkdir(__DIR__.'/changed/'.$testPage->getSlug(), 0777, true);
             $new_expected = __DIR__.'/changed/'.$testPage->getSlug().'/expected-metadata.json';
             $old_expected = __DIR__.'/test-pages/'.$testPage->getSlug().'/expected-metadata.json';
             //file_put_contents(__DIR__.'/changed/'.$testPage->getSlug().'/expected-metadata-current.json', json_encode($testPage->getExpectedMetadata(), JSON_PRETTY_PRINT));
@@ -111,8 +111,8 @@ class ReadabilityTest extends \PHPUnit\Framework\TestCase
     public function testHTMLParserParsesImages(TestPage $testPage): void
     {
         $options = ['OriginalURL' => 'http://fakehost/test/test.html',
-            'fixRelativeURLs' => true,
-            'substituteEntities' => true,
+            'FixRelativeURLs' => true,
+            'SubstituteEntities' => true,
         ];
 
         $configuration = new Configuration(array_merge($testPage->getConfiguration(), $options));
@@ -121,7 +121,7 @@ class ReadabilityTest extends \PHPUnit\Framework\TestCase
         $readability->parse($testPage->getSourceHTML());
 
         if (getenv('output-changes') && $testPage->getExpectedImages() !== array_values($readability->getImages())) {
-            @mkdir(__DIR__.'/changed/'.$testPage->getSlug());
+            @mkdir(__DIR__.'/changed/'.$testPage->getSlug(), 0777, true);
             $new_expected = __DIR__.'/changed/'.$testPage->getSlug().'/expected-images.json';
             $old_expected = __DIR__.'/test-pages/'.$testPage->getSlug().'/expected-images.json';
             //file_put_contents(__DIR__.'/changed/'.$testPage->getSlug().'/expected-images-current.json', json_encode($testPage->getExpectedImages(), JSON_PRETTY_PRINT));
