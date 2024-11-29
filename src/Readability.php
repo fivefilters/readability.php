@@ -6,6 +6,7 @@ use fivefilters\Readability\Nodes\DOM\DOMDocument;
 use fivefilters\Readability\Nodes\DOM\DOMElement;
 use fivefilters\Readability\Nodes\DOM\DOMNode;
 use fivefilters\Readability\Nodes\DOM\DOMText;
+use fivefilters\Readability\Nodes\DOM\DOMComment;
 use fivefilters\Readability\Nodes\NodeUtility;
 use Psr\Log\LoggerInterface;
 use Masterminds\HTML5;
@@ -794,9 +795,12 @@ class Readability
     /**
      * Gets nodes from the root element.
      */
-    private function getNodes(DOMNode|DOMText $node): array
+    private function getNodes(DOMNode|DOMComment|DOMText|DOMElement|null $node): array
     {
         $this->logger->info('[Get Nodes] Retrieving nodes...');
+        if ($node === null) {
+            return [];
+        }
 
         $stripUnlikelyCandidates = $this->configuration->getStripUnlikelyCandidates();
 
@@ -939,7 +943,7 @@ class Readability
      *
      * @return int 1 = same text, 0 = completely different text
      */
-    private function textSimilarity(string $textA, string $textB): int
+    private function textSimilarity(string $textA, string $textB): float
     {
         $tokensA = array_filter(preg_split(NodeUtility::$regexps['tokenize'], mb_strtolower($textA)));
         $tokensB = array_filter(preg_split(NodeUtility::$regexps['tokenize'], mb_strtolower($textB)));
@@ -956,7 +960,7 @@ class Readability
     /**
      * Checks if the node is a byline.
      */
-    private function checkByline(DOMNode $node, string $matchString): bool
+    private function checkByline(DOMNode|DOMText|DOMElement $node, string $matchString): bool
     {
         if (!$this->configuration->getArticleByLine()) {
             return false;
@@ -999,7 +1003,7 @@ class Readability
     /**
      * Converts some of the common HTML entities in string to their corresponding characters.
      */
-    private function unescapeHtmlEntities(string $str): string
+    private function unescapeHtmlEntities(?string $str): ?string
     {
         if (!$str) {
             return $str;
@@ -1026,7 +1030,7 @@ class Readability
      * Check if node is image, or if node contains exactly only one image
      * whether as a direct child or as its descendants.
      */
-    private function isSingleImage(DOMElement $node): bool
+    private function isSingleImage(DOMElement|DOMNode|DOMText $node): bool
     {
         if ($node->tagName === 'img') {
             return true;
@@ -1749,7 +1753,7 @@ class Readability
     /**
      * Remove the style attribute on every e and under.
      **/
-    public function _cleanStyles(DOMDocument|DOMNode $node): void
+    public function _cleanStyles(DOMDocument|DOMNode|DOMElement|DOMText $node): void
     {
         if (property_exists($node, 'tagName') && $node->tagName === 'svg') {
             return;
@@ -2038,7 +2042,7 @@ class Readability
      * @param DOMNode the node to check.
      * @return boolean indicating whether this is a title-like header.
      */
-    private function headerDuplicatesTitle(DOMNode $node): bool
+    private function headerDuplicatesTitle(DOMNode|DOMText|DOMElement $node): bool
     {
         if ($node->nodeName !== 'h1' && $node->nodeName !== 'h2') {
             return false;
@@ -2058,7 +2062,7 @@ class Readability
      * Readability.js has a special filter to avoid cleaning the classes that the algorithm adds. We don't add classes
      * here so no need to filter those.
      **/
-    public function _cleanClasses(DOMDocument|DOMNode|DOMElement $node): void
+    public function _cleanClasses(DOMDocument|DOMText|DOMNode|DOMElement $node): void
     {
         if ($node->getAttribute('class') !== '') {
             $node->removeAttribute('class');
@@ -2176,9 +2180,8 @@ class Readability
      *
      * @param  array nodeList The NodeList.
      * @param  callable fn    The test function.
-     * @return DOMNode|null
      */
-    private function findNode(array $nodeList, callable $fn): ?DOMNode
+    private function findNode(array $nodeList, callable $fn): DOMNode|DOMText|DOMElement|null
     {
         foreach ($nodeList as $node) {
             if ($fn($node)) {
@@ -2207,7 +2210,7 @@ class Readability
     /**
      * Set title.
      */
-    protected function setTitle(string $title): void
+    protected function setTitle(?string $title): void
     {
         $this->title = $title;
     }
@@ -2258,7 +2261,7 @@ class Readability
     /**
      * Set excerpt.
      */
-    public function setExcerpt(string $excerpt): void
+    public function setExcerpt(?string $excerpt): void
     {
         $this->excerpt = $excerpt;
     }

@@ -10,6 +10,7 @@
 # Ubuntu 23.04 - php 8.1, libxml2 2.9.14
 # Ubuntu 23.10 - php 8.2, libxml2 2.9.14
 # Ubuntu 24.04 - php 8.3, libxml2 2.9.14
+# Ubuntu 24.10 - php 8.3, libxml2 2.12.7
 
 ARG PHP_VERSION
 ARG LIBXML_VERSION

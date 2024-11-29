@@ -221,7 +221,7 @@ trait NodeTrait
      * Get the density of links as a percentage of the content
      * This is the amount of text that is inside a link divided by the total text in the node.
      */
-    public function getLinkDensity(): int
+    public function getLinkDensity(): float
     {
         $textLength = mb_strlen($this->getTextContent(true));
         if ($textLength === 0) {

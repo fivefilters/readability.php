@@ -5,6 +5,8 @@ namespace fivefilters\Readability\Nodes;
 use fivefilters\Readability\Nodes\DOM\DOMDocument;
 use fivefilters\Readability\Nodes\DOM\DOMElement;
 use fivefilters\Readability\Nodes\DOM\DOMNode;
+use fivefilters\Readability\Nodes\DOM\DOMText;
+use fivefilters\Readability\Nodes\DOM\DOMComment;
 use fivefilters\Readability\Nodes\DOM\DOMNodeList;
 
 /**
@@ -50,7 +52,7 @@ class NodeUtility
      *
      * Imported from the Element class on league\html-to-markdown.
      */
-    public static function nextNode(DOMNode $node): DOMNode
+    public static function nextNode(DOMNode|DOMComment|DOMText|DOMElement|null $node): DOMNode|DOMComment|DOMText|DOMElement|null
     {
         $next = $node;
         while ($next
@@ -66,7 +68,7 @@ class NodeUtility
      * Changes the node tag name. Since tagName on DOMElement is a read only value, this must be done creating a new
      * element with the new tag name and importing it to the main DOMDocument.
      */
-    public static function setNodeTag(DOMNode|DOMElement $node, string $value, bool $importAttributes = true): DOMNode
+    public static function setNodeTag(DOMNode|DOMElement $node, string $value, bool $importAttributes = true): DOMNode|DOMElement
     {
         $new = new DOMDocument('1.0', 'utf-8');
         $new->appendChild($new->createElement($value));
@@ -95,7 +97,7 @@ class NodeUtility
     /**
      * Removes the current node and returns the next node to be parsed (child, sibling or parent).
      */
-    public static function removeAndGetNext(DOMNode|DOMElement $node): DOMNode
+    public static function removeAndGetNext(DOMNode|DOMComment|DOMText|DOMElement $node): DOMNode|DOMComment|DOMText|DOMElement|null
     {
         $nextNode = self::getNextNode($node, true);
         $node->parentNode->removeChild($node);
@@ -106,7 +108,7 @@ class NodeUtility
     /**
      * Remove the selected node.
      */
-    public static function removeNode(DOMElement $node): void
+    public static function removeNode(DOMNode|DOMComment|DOMText|DOMElement $node): void
     {
         $parent = $node->parentNode;
         if ($parent) {
@@ -118,7 +120,7 @@ class NodeUtility
      * Returns the next node. First checks for children (if the flag allows it), then for siblings, and finally
      * for parents.
      */
-    public static function getNextNode(DOMNode|DOMElement|DOMDocument $originalNode, bool $ignoreSelfAndKids = false): DOMNode
+    public static function getNextNode(DOMNode|DOMComment|DOMText|DOMElement|DOMDocument $originalNode, bool $ignoreSelfAndKids = false): DOMNode|DOMComment|DOMText|DOMElement|DOMDocument|null
     {
         /*
          * Traverse the DOM from node to node, starting at the node passed in.
