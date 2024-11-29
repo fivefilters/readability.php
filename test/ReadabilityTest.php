@@ -2,6 +2,7 @@
 
 namespace fivefilters\Readability\Test;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use fivefilters\Readability\Configuration;
 use fivefilters\Readability\ParseException;
 use fivefilters\Readability\Readability;
@@ -15,19 +16,15 @@ class ReadabilityTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * Test that Readability parses the HTML correctly and matches the expected result.
-     *
-     * @dataProvider getSamplePages
-     *
-     * @param TestPage $testPage
-     *
      * @throws ParseException
      */
-    public function testReadabilityParsesHTML(TestPage $testPage)
+    #[DataProvider('getSamplePages')]
+    public function testReadabilityParsesHTML(TestPage $testPage): void
     {
         $options = ['OriginalURL' => 'http://fakehost/test/test.html',
             'FixRelativeURLs' => true,
             'SubstituteEntities' => true,
-            'ArticleByLine' => true
+            'ArticleByline' => true
         ];
 
         $configuration = new Configuration(array_merge($testPage->getConfiguration(), $options));
@@ -63,19 +60,15 @@ class ReadabilityTest extends \PHPUnit\Framework\TestCase
 
     /**
      * Test that Readability parses the HTML correctly and matches the expected result.
-     *
-     * @dataProvider getSamplePages
-     *
-     * @param TestPage $testPage
-     *
      * @throws ParseException
      */
-    public function testReadabilityParsesMetadata(TestPage $testPage)
+    #[DataProvider('getSamplePages')]
+    public function testReadabilityParsesMetadata(TestPage $testPage): void
     {
         $options = ['OriginalURL' => 'http://fakehost/test/test.html',
             'FixRelativeURLs' => true,
             'SubstituteEntities' => true,
-            'ArticleByLine' => true
+            'ArticleByline' => true
         ];
 
         $configuration = new Configuration(array_merge($testPage->getConfiguration(), $options));
@@ -112,13 +105,10 @@ class ReadabilityTest extends \PHPUnit\Framework\TestCase
 
     /**
      * Test that Readability returns all the expected images from the test page.
-     *
-     * @param TestPage $testPage
-     * @dataProvider getSamplePages
-     *
      * @throws ParseException
      */
-    public function testHTMLParserParsesImages(TestPage $testPage)
+    #[DataProvider('getSamplePages')]
+    public function testHTMLParserParsesImages(TestPage $testPage): void
     {
         $options = ['OriginalURL' => 'http://fakehost/test/test.html',
             'fixRelativeURLs' => true,
@@ -146,10 +136,8 @@ class ReadabilityTest extends \PHPUnit\Framework\TestCase
 
     /**
      * Main data provider.
-     *
-     * @return \Generator
      */
-    public static function getSamplePages()
+    public static function getSamplePages(): \Generator
     {
         $path = pathinfo(__FILE__, PATHINFO_DIRNAME) . DIRECTORY_SEPARATOR . 'test-pages';
         $testPages = scandir($path);
@@ -170,10 +158,9 @@ class ReadabilityTest extends \PHPUnit\Framework\TestCase
 
     /**
      * Test that Readability throws an exception with malformed HTML.
-     *
      * @throws ParseException
      */
-    public function testReadabilityThrowsExceptionWithMalformedHTML()
+    public function testReadabilityThrowsExceptionWithMalformedHTML(): void
     {
         $parser = new Readability(new Configuration());
         $this->expectException(ParseException::class);
@@ -183,10 +170,9 @@ class ReadabilityTest extends \PHPUnit\Framework\TestCase
 
     /**
      * Test that Readability throws an exception with incomplete or short HTML.
-     *
      * @throws ParseException
      */
-    public function testReadabilityThrowsExceptionWithUnparseableHTML()
+    public function testReadabilityThrowsExceptionWithUnparseableHTML(): void
     {
         $parser = new Readability(new Configuration());
         $this->expectException(ParseException::class);
@@ -197,7 +183,7 @@ class ReadabilityTest extends \PHPUnit\Framework\TestCase
     /**
      * Test that the Readability object has no content as soon as it is instantiated.
      */
-    public function testReadabilityCallGetContentWithNoContent()
+    public function testReadabilityCallGetContentWithNoContent(): void
     {
         $parser = new Readability(new Configuration());
         $this->assertNull($parser->getContent());

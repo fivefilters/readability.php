@@ -2,6 +2,7 @@
 
 namespace fivefilters\Readability\Test;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use fivefilters\Readability\Configuration;
 use Monolog\Handler\NullHandler;
 use Monolog\Logger;
@@ -12,36 +13,33 @@ use Monolog\Logger;
 class ConfigurationTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @dataProvider getParams
-     *
-     * @param array $params
+     * Test constructor sets parameters
      */
-    public function testConfigurationConstructorSetsParameters(array $params)
+    #[DataProvider('getParams')]
+    public function testConfigurationConstructorSetsParameters(array $params): void
     {
         $config = new Configuration($params);
         $this->doEqualsAsserts($config, $params);
     }
 
     /**
-     * @dataProvider getParams
-     *
-     * @param array $params
+     * Test invalid parameter is not in config
      */
-    public function testInvalidParameterIsNotInConfig(array $params)
+    #[DataProvider('getParams')]
+    public function testInvalidParameterIsNotInConfig(array $params): void
     {
         $config = new Configuration($params);
         $this->assertArrayNotHasKey('invalidParameter', $config->toArray(), 'Invalid param key is not present in config');
     }
 
     /**
-     * @param Configuration $config
-     * @param array $options
+     * Check if the config getters are correct
      */
-    private function doEqualsAsserts(Configuration $config, array $options)
+    private function doEqualsAsserts(Configuration $config, array $options): void
     {
         $this->assertEquals($options['maxTopCandidates'], $config->getMaxTopCandidates());
         $this->assertEquals($options['charThreshold'], $config->getCharThreshold());
-        $this->assertEquals($options['articleByLine'], $config->getArticleByLine());
+        $this->assertEquals($options['articleByline'], $config->getArticleByline());
         $this->assertEquals($options['stripUnlikelyCandidates'], $config->getStripUnlikelyCandidates());
         $this->assertEquals($options['cleanConditionally'], $config->getCleanConditionally());
         $this->assertEquals($options['weightClasses'], $config->getWeightClasses());
@@ -49,11 +47,11 @@ class ConfigurationTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($options['substituteEntities'], $config->getSubstituteEntities());
         $this->assertEquals($options['normalizeEntities'], $config->getNormalizeEntities());
         $this->assertEquals($options['originalURL'], $config->getOriginalURL());
-        $this->assertEquals($options['summonCthulhu'], $config->getOriginalURL());
+        $this->assertEquals($options['summonCthulhu'], $config->getSummonCthulhu());
     }
 
     /**
-     * @return array
+     * Data provider
      */
     public static function getParams(): array
     {
@@ -62,7 +60,7 @@ class ConfigurationTest extends \PHPUnit\Framework\TestCase
                 'maxTopCandidates' => 3,
                 'wordThreshold' => 500,
                 'charThreshold' => 500,
-                'articleByLine' => true,
+                'articleByline' => true,
                 'stripUnlikelyCandidates' => false,
                 'cleanConditionally' => false,
                 'weightClasses' => false,
@@ -79,7 +77,7 @@ class ConfigurationTest extends \PHPUnit\Framework\TestCase
     /**
      * Test if a logger interface can be injected and retrieved from the Configuration object.
      */
-    public function testLoggerCanBeInjected()
+    public function testLoggerCanBeInjected(): void
     {
         $configuration = new Configuration();
         $log = new Logger('Readability');
