@@ -962,7 +962,7 @@ class Readability
      */
     private function checkByline(DOMNode|DOMText|DOMElement $node, string $matchString): bool
     {
-        if (!$this->configuration->getArticleByLine()) {
+        if (!$this->configuration->getArticleByline()) {
             return false;
         }
 
@@ -987,7 +987,7 @@ class Readability
     }
 
     /**
-     * Checks the validity of a byLine. Based on string length.
+     * Checks the validity of a byline. Based on string length.
      */
     private function isValidByline(string $text): bool
     {

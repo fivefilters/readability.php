@@ -15,7 +15,7 @@ class Configuration
 
     protected int $maxTopCandidates = 5;
     protected int $charThreshold = 500;
-    protected bool $articleByLine = false;
+    protected bool $articleByline = false;
     protected bool $stripUnlikelyCandidates = true;
     protected bool $cleanConditionally = true;
     protected bool $weightClasses = true;
@@ -119,17 +119,17 @@ class Configuration
     /**
      * Get article by line.
      */
-    public function getArticleByLine(): bool
+    public function getArticleByline(): bool
     {
-        return $this->articleByLine;
+        return $this->articleByline;
     }
 
     /**
      * Set article by line.
      */
-    public function setArticleByLine(bool $articleByLine): Configuration
+    public function setArticleByline(bool $articleByline): Configuration
     {
-        $this->articleByLine = $articleByLine;
+        $this->articleByline = $articleByline;
 
         return $this;
     }
