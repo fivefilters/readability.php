@@ -40,21 +40,17 @@ class NodeUtility
         'b64DataUrl' => '/^data:\s*([^\s;,]+)\s*;\s*base64\s*,/i',
         // See: https://schema.org/Article
         'jsonLdArticleTypes' => '/^Article|AdvertiserContentArticle|NewsArticle|AnalysisNewsArticle|AskPublicNewsArticle|BackgroundNewsArticle|OpinionNewsArticle|ReportageNewsArticle|ReviewNewsArticle|Report|SatiricalArticle|ScholarlyArticle|MedicalScholarlyArticle|SocialMediaPosting|BlogPosting|LiveBlogPosting|DiscussionForumPosting|TechArticle|APIReference$/'
-     
+
     ];
 
     /**
      * Finds the next node, starting from the given node, and ignoring
      * whitespace in between. If the given node is an element, the same node is
      * returned.
-     * 
+     *
      * Imported from the Element class on league\html-to-markdown.
-     *
-     * @param $node
-     *
-     * @return DOMNode
      */
-    public static function nextNode($node)
+    public static function nextNode(DOMNode $node): DOMNode
     {
         $next = $node;
         while ($next
@@ -69,14 +65,8 @@ class NodeUtility
     /**
      * Changes the node tag name. Since tagName on DOMElement is a read only value, this must be done creating a new
      * element with the new tag name and importing it to the main DOMDocument.
-     *
-     * @param DOMNode|DOMElement $node
-     * @param string $value
-     * @param bool $importAttributes
-     *
-     * @return DOMNode
      */
-    public static function setNodeTag($node, $value, $importAttributes = true)
+    public static function setNodeTag(DOMNode|DOMElement $node, string $value, bool $importAttributes = true): DOMNode
     {
         $new = new DOMDocument('1.0', 'utf-8');
         $new->appendChild($new->createElement($value));
@@ -104,12 +94,8 @@ class NodeUtility
 
     /**
      * Removes the current node and returns the next node to be parsed (child, sibling or parent).
-     *
-     * @param DOMNode|DOMElement $node
-     *
-     * @return DOMNode
      */
-    public static function removeAndGetNext($node)
+    public static function removeAndGetNext(DOMNode|DOMElement $node): DOMNode
     {
         $nextNode = self::getNextNode($node, true);
         $node->parentNode->removeChild($node);
@@ -119,12 +105,8 @@ class NodeUtility
 
     /**
      * Remove the selected node.
-     *
-     * @param $node DOMElement
-     *
-     * @return void
-     **/
-    public static function removeNode($node)
+     */
+    public static function removeNode(DOMElement $node): void
     {
         $parent = $node->parentNode;
         if ($parent) {
@@ -135,13 +117,8 @@ class NodeUtility
     /**
      * Returns the next node. First checks for children (if the flag allows it), then for siblings, and finally
      * for parents.
-     *
-     * @param DOMNode|DOMElement|DOMDocument $originalNode
-     * @param bool $ignoreSelfAndKids
-     *
-     * @return DOMNode
      */
-    public static function getNextNode($originalNode, $ignoreSelfAndKids = false)
+    public static function getNextNode(DOMNode|DOMElement|DOMDocument $originalNode, bool $ignoreSelfAndKids = false): DOMNode
     {
         /*
          * Traverse the DOM from node to node, starting at the node passed in.
@@ -173,12 +150,8 @@ class NodeUtility
 
     /**
      * Remove all empty DOMNodes from DOMNodeLists.
-     *
-     * @param \DOMNodeList $list
-     *
-     * @return DOMNodeList
      */
-    public static function filterTextNodes(\DOMNodeList $list)
+    public static function filterTextNodes(\DOMNodeList $list): DOMNodeList
     {
         $newList = new DOMNodeList();
         foreach ($list as $node) {
