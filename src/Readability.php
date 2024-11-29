@@ -1459,10 +1459,11 @@ class Readability
                 } elseif ($sibling->nodeName === 'p') {
                     $linkDensity = $sibling->getLinkDensity();
                     $nodeContent = $sibling->getTextContent(true);
+                    $nodeContentLength = mb_strlen($nodeContent);
 
-                    if (mb_strlen($nodeContent) > 80 && $linkDensity < 0.25) {
+                    if ($nodeContentLength > 80 && $linkDensity < 0.25) {
                         $append = true;
-                    } elseif ($nodeContent && mb_strlen($nodeContent) < 80 && $linkDensity === 0 && preg_match('/\.( |$)/', $nodeContent)) {
+                    } elseif ($nodeContentLength > 0 && $nodeContentLength < 80 && $linkDensity < 0.25 && preg_match('/\.( |$)/', $nodeContent)) {
                         $append = true;
                     }
                 }
