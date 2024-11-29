@@ -6,7 +6,6 @@ use fivefilters\Readability\Nodes\DOM\DOMDocument;
 use fivefilters\Readability\Nodes\DOM\DOMElement;
 use fivefilters\Readability\Nodes\DOM\DOMNode;
 use fivefilters\Readability\Nodes\DOM\DOMText;
-use DOMNodeList;
 
 /**
  * @property ?DOMNode $firstChild
@@ -19,29 +18,20 @@ trait NodeTrait
 {
     /**
      * Content score of the node. Used to determine the value of the content.
-     *
-     * @var int
      */
-    public $contentScore = 0;
+    public float $contentScore = 0.0;
 
     /**
      * Flag for initialized status.
-     *
-     * @var bool
      */
-    private $initialized = false;
+    private bool $initialized = false;
 
     /**
-     * Flag data tables.
-     *
-     * @var bool
+     * Flag for data tables.
      */
-    private $readabilityDataTable = false;
+    private bool $readabilityDataTable = false;
 
-    /**
-     * @var array
-     */
-    private $divToPElements = [
+    private array $divToPElements = [
         'blockquote',
         'dl',
         'div',
@@ -56,10 +46,8 @@ trait NodeTrait
     /**
      * The commented out elements qualify as phrasing content but tend to be
      * removed by readability when put into paragraphs, so we ignore them here.
-     *
-     * @var array
      */
-    private $phrasing_elems = [
+    private array $phrasing_elems = [
         // 'CANVAS', 'IFRAME', 'SVG', 'VIDEO',
         'abbr', 'audio', 'b', 'bdo', 'br', 'button', 'cite', 'code', 'data',
         'datalist', 'dfn', 'em', 'embed', 'i', 'img', 'input', 'kbd', 'label',
@@ -69,7 +57,7 @@ trait NodeTrait
     ];
 
     /**
-     * initialized getter.
+     * Is initialized getter.
      */
     public function isInitialized(): bool
     {
@@ -444,10 +432,10 @@ trait NodeTrait
      */
     public function isProbablyVisible(): bool
     {
-        return !preg_match('/display:( )?none/i', $this->getAttribute('style')) && 
+        return !preg_match('/display:( )?none/i', $this->getAttribute('style')) &&
                 !$this->hasAttribute('hidden') &&
                 //check for "fallback-image" so that wikimedia math images are displayed
-                (!$this->hasAttribute('aria-hidden') || $this->getAttribute('aria-hidden') !== 'true' || ($this->hasAttribute('class') && strpos($this->getAttribute('class'), 'fallback-image') !== false));
+                (!$this->hasAttribute('aria-hidden') || $this->getAttribute('aria-hidden') !== 'true' || str_contains($this->getAttribute('class'), 'fallback-image'));
     }
 
     /**
@@ -455,7 +443,7 @@ trait NodeTrait
      */
     public function isWhitespace(): bool
     {
-        return ($this->nodeType === XML_TEXT_NODE && mb_strlen(trim($this->textContent)) === 0) ||
+        return ($this->nodeType === XML_TEXT_NODE && $this->isWhitespaceInElementContent()) ||
             ($this->nodeType === XML_ELEMENT_NODE && $this->nodeName === 'br');
     }
 
@@ -497,17 +485,12 @@ trait NodeTrait
     }
 
     /**
-     * Mimics JS's firstElementChild property. PHP only has firstChild which could be any type of DOMNode. Use this
-     * function to get the first one that is an DOMElement node.
+     * Git first element child or null
      */
     public function getFirstElementChild(): ?DOMElement
     {
-        if ($this->childNodes instanceof \Traversable) {
-            foreach ($this->childNodes as $node) {
-                if ($node instanceof DOMElement) {
-                    return $node;
-                }
-            }
+        if ($this->nodeType === XML_ELEMENT_NODE || $this->nodeType === XML_DOCUMENT_NODE) {
+            return $this->firstElementChild;
         }
 
         return null;

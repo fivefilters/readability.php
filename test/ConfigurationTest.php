@@ -43,6 +43,7 @@ class ConfigurationTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($options['stripUnlikelyCandidates'], $config->getStripUnlikelyCandidates());
         $this->assertEquals($options['cleanConditionally'], $config->getCleanConditionally());
         $this->assertEquals($options['weightClasses'], $config->getWeightClasses());
+        $this->assertEquals($options['keepClasses'], $config->getKeepClasses());
         $this->assertEquals($options['fixRelativeURLs'], $config->getFixRelativeURLs());
         $this->assertEquals($options['substituteEntities'], $config->getSubstituteEntities());
         $this->assertEquals($options['normalizeEntities'], $config->getNormalizeEntities());
@@ -68,7 +69,8 @@ class ConfigurationTest extends \PHPUnit\Framework\TestCase
                 'substituteEntities' => true,
                 'normalizeEntities' => true,
                 'originalURL' => 'my.original.url',
-                'summonCthulhu' => 'my.original.url',
+                'summonCthulhu' => false,
+                'keepClasses' => false,
                 'invalidParameter' => 'invalidParameterValue'
             ]
         ]];

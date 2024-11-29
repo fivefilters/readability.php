@@ -665,7 +665,7 @@ class Readability
                 $curTitle = preg_replace('/[^\|\-\\\\\/>»]*[\|\-\\\\\/>»](.*)/i', '$1', $originalTitle);
                 $this->logger->info(sprintf('[Metadata] Title too short, using the first part of the title instead: \'%s\'', $curTitle));
             }
-        } elseif (strpos($curTitle, ': ') !== false) {
+        } elseif (str_contains($curTitle, ': ')) {
             // Check if we have an heading containing this exact string, so we
             // could assume it's the full title.
             $match = false;
@@ -976,7 +976,7 @@ class Readability
         $rel = $node->getAttribute('rel');
         $itemprop = $node->getAttribute("itemprop");
 
-        if ($rel === 'author' || ($itemprop && strpos($itemprop, 'author') !== false) || preg_match(NodeUtility::$regexps['byline'], $matchString) && $this->isValidByline($node->getTextContent(false))) {
+        if ($rel === 'author' || ($itemprop && str_contains($itemprop, 'author')) || preg_match(NodeUtility::$regexps['byline'], $matchString) && $this->isValidByline($node->getTextContent(false))) {
             $this->logger->info(sprintf('[Metadata] Found article author: \'%s\'', $node->getTextContent(false)));
             $this->setAuthor(trim($node->getTextContent(false)));
 
@@ -1117,7 +1117,7 @@ class Readability
                     }
                 }
 
-                $noscript->parentNode->replaceChild($tmp->getFirstElementChild(), $prevElement);
+                $noscript->parentNode->replaceChild($tmp->firstElementChild, $prevElement);
             }
         });
     }
@@ -1604,11 +1604,11 @@ class Readability
         // Remove single-cell tables
         foreach ($article->shiftingAwareGetElementsByTagName('table') as $table) {
             /** @var DOMElement $table */
-            $tbody = $table->hasSingleTagInsideElement('tbody') ? $table->getFirstElementChild() : $table;
+            $tbody = $table->hasSingleTagInsideElement('tbody') ? $table->firstElementChild : $table;
             if ($tbody->hasSingleTagInsideElement('tr')) {
-                $row = $tbody->getFirstElementChild();
+                $row = $tbody->firstElementChild;
                 if ($row->hasSingleTagInsideElement('td')) {
-                    $cell = $row->getFirstElementChild();
+                    $cell = $row->firstElementChild;
                     $cell = NodeUtility::setNodeTag($cell, (array_reduce(iterator_to_array($cell->childNodes), function ($carry, $node) {
                         return $node->isPhrasingContent() && $carry;
                     }, true)) ? 'p' : 'div');
@@ -2064,7 +2064,7 @@ class Readability
      **/
     public function _cleanClasses(DOMDocument|DOMText|DOMNode|DOMElement $node): void
     {
-        if ($node->getAttribute('class') !== '') {
+        if ($node->hasAttribute('class')) {
             $node->removeAttribute('class');
         }
 
@@ -2088,7 +2088,7 @@ class Readability
                 if ($href) {
                     // Remove links with javascript: URIs, since
                     // they won't work after scripts have been removed from the page.
-                    if (strpos($href, 'javascript:') === 0) {
+                    if (str_starts_with($href, 'javascript:')) {
                         $this->logger->debug(sprintf('[PostProcess] Removing \'javascript:\' link. Content is: \'%s\'', substr($link->textContent, 0, 128)));
 
                         // if the link only contains simple text content, it can be converted to a text node

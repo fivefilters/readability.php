@@ -157,7 +157,7 @@ class NodeUtility
     {
         $newList = new DOMNodeList();
         foreach ($list as $node) {
-            if ($node->nodeType !== XML_TEXT_NODE || mb_strlen(trim($node->nodeValue))) {
+            if ($node->nodeType !== XML_TEXT_NODE || !$node->isWhitespaceInElementContent()) {
                 $newList->add($node);
             }
         }
