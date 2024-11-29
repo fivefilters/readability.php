@@ -1,6 +1,15 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [v3.3.0](https://github.com/fivefilters/readability.php/releases/tag/v3.3.0)
+- Fixed PHP 8.4 deprecation warning (reported by @pich)
+- Migrated type declarations from PHPDoc blocks to native PHP 8 property and method types
+- Empty class attributes now removed when `keepClasses` is disabled
+- Replaced legacy DOM operations with native PHP 8 methods:
+  - `isWhitespaceInElementContent()` for whitespace detection
+  - `firstElementChild` and `previousElementSibling` for DOM traversal
+- Updated Docker test environment to support PHP 8.1-8.4
+
 ## [v3.2.0](https://github.com/fivefilters/readability.php/releases/tag/v3.2.0)
 - Update dependencies to newer versions (League/URI version 7), to make it compatible with projects already relying on those versions
 - Minimum PHP version set to 8.1 (required by League/URI 7)
