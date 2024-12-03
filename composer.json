@@ -27,7 +27,7 @@
         "psr-4": {"fivefilters\\Readability\\Test\\": "test"}
     },
     "require": {
-        "php": ">=8.1",
+        "php": ">=8.4",
         "ext-dom": "*",
         "ext-xml": "*",
         "ext-mbstring": "*",
