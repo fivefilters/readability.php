@@ -4,7 +4,7 @@ namespace fivefilters\Readability\Nodes\DOM;
 
 use fivefilters\Readability\Nodes\NodeTrait;
 
-class DOMNotation extends \DOMNotation
+class Attr extends \DOM\Attr
 {
     use NodeTrait;
 }

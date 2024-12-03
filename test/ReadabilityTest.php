@@ -23,7 +23,6 @@ class ReadabilityTest extends \PHPUnit\Framework\TestCase
     {
         $options = ['OriginalURL' => 'http://fakehost/test/test.html',
             'FixRelativeURLs' => true,
-            'SubstituteEntities' => true,
             'ArticleByline' => true
         ];
 
@@ -67,7 +66,6 @@ class ReadabilityTest extends \PHPUnit\Framework\TestCase
     {
         $options = ['OriginalURL' => 'http://fakehost/test/test.html',
             'FixRelativeURLs' => true,
-            'SubstituteEntities' => true,
             'ArticleByline' => true
         ];
 
@@ -112,7 +110,6 @@ class ReadabilityTest extends \PHPUnit\Framework\TestCase
     {
         $options = ['OriginalURL' => 'http://fakehost/test/test.html',
             'FixRelativeURLs' => true,
-            'SubstituteEntities' => true,
         ];
 
         $configuration = new Configuration(array_merge($testPage->getConfiguration(), $options));

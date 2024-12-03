@@ -2,12 +2,12 @@
 
 namespace fivefilters\Readability\Nodes;
 
-use fivefilters\Readability\Nodes\DOM\DOMDocument;
-use fivefilters\Readability\Nodes\DOM\DOMElement;
-use fivefilters\Readability\Nodes\DOM\DOMNode;
-use fivefilters\Readability\Nodes\DOM\DOMText;
-use fivefilters\Readability\Nodes\DOM\DOMComment;
-use fivefilters\Readability\Nodes\DOM\DOMNodeList;
+use fivefilters\Readability\Nodes\DOM;
+use fivefilters\Readability\Nodes\DOM\Element;
+use fivefilters\Readability\Nodes\DOM\Node;
+use fivefilters\Readability\Nodes\DOM\Text;
+use fivefilters\Readability\Nodes\DOM\Comment;
+use fivefilters\Readability\Nodes\DOM\NodeList;
 
 /**
  * Class NodeUtility.
@@ -52,7 +52,7 @@ class NodeUtility
      *
      * Imported from the Element class on league\html-to-markdown.
      */
-    public static function nextNode(DOMNode|DOMComment|DOMText|DOMElement|null $node): DOMNode|DOMComment|DOMText|DOMElement|null
+    public static function nextNode(Node|Comment|Text|Element|null $node): Node|Comment|Text|Element|null
     {
         $next = $node;
         while ($next
@@ -68,9 +68,10 @@ class NodeUtility
      * Changes the node tag name. Since tagName on DOMElement is a read only value, this must be done creating a new
      * element with the new tag name and importing it to the main DOMDocument.
      */
-    public static function setNodeTag(DOMNode|DOMElement $node, string $value, bool $importAttributes = true): DOMNode|DOMElement
+    public static function setNodeTag(Node|Element $node, string $value, bool $importAttributes = true): Node|Element
     {
-        $new = new DOMDocument('1.0', 'utf-8');
+        $new = \Dom\HtmlDocument::createEmpty();
+        NodeUtility::registerReadabilityNodeClasses($new);
         $new->appendChild($new->createElement($value));
 
         $children = $node->childNodes;
@@ -97,7 +98,7 @@ class NodeUtility
     /**
      * Removes the current node and returns the next node to be parsed (child, sibling or parent).
      */
-    public static function removeAndGetNext(DOMNode|DOMComment|DOMText|DOMElement $node): DOMNode|DOMComment|DOMText|DOMElement|null
+    public static function removeAndGetNext(Node|Comment|Text|Element $node): Node|Comment|Text|Element|null
     {
         $nextNode = self::getNextNode($node, true);
         $node->parentNode->removeChild($node);
@@ -108,7 +109,7 @@ class NodeUtility
     /**
      * Remove the selected node.
      */
-    public static function removeNode(DOMNode|DOMComment|DOMText|DOMElement $node): void
+    public static function removeNode(Node|Comment|Text|Element $node): void
     {
         $parent = $node->parentNode;
         if ($parent) {
@@ -120,7 +121,7 @@ class NodeUtility
      * Returns the next node. First checks for children (if the flag allows it), then for siblings, and finally
      * for parents.
      */
-    public static function getNextNode(DOMNode|DOMComment|DOMText|DOMElement|DOMDocument $originalNode, bool $ignoreSelfAndKids = false): DOMNode|DOMComment|DOMText|DOMElement|DOMDocument|null
+    public static function getNextNode(Node|Comment|Text|Element|\Dom\HtmlDocument $originalNode, bool $ignoreSelfAndKids = false): Node|Comment|Text|Element|\Dom\HtmlDocument|null
     {
         /*
          * Traverse the DOM from node to node, starting at the node passed in.
@@ -153,15 +154,34 @@ class NodeUtility
     /**
      * Remove all empty DOMNodes from DOMNodeLists.
      */
-    public static function filterTextNodes(\DOMNodeList $list): DOMNodeList
+    public static function filterTextNodes(\Dom\NodeList $list): NodeList
     {
-        $newList = new DOMNodeList();
+        $newList = new NodeList();
         foreach ($list as $node) {
-            if ($node->nodeType !== XML_TEXT_NODE || !$node->isWhitespaceInElementContent()) {
+            if ($node->nodeType !== XML_TEXT_NODE || mb_trim($node->nodeValue) !== '') {
                 $newList->add($node);
             }
         }
 
         return $newList;
+    }
+
+    public static function registerReadabilityNodeClasses(\DOM\HtmlDocument $dom): void
+    {
+        $dom->registerNodeClass('DOM\HtmlElement', DOM\Element::class);
+        $dom->registerNodeClass('DOM\Attr', DOM\Attr::class);
+        $dom->registerNodeClass('DOM\CdataSection', DOM\CdataSection::class);
+        $dom->registerNodeClass('DOM\CharacterData', DOM\CharacterData::class);
+        $dom->registerNodeClass('DOM\Comment', DOM\Comment::class);
+        //$dom->registerNodeClass('DOM\HtmlDocument', DOM\HtmlDocument::class);
+        $dom->registerNodeClass('DOM\DocumentFragment', DOM\DocumentFragment::class);
+        $dom->registerNodeClass('DOM\DocumentType', DOM\DocumentType::class);
+        $dom->registerNodeClass('DOM\Element', DOM\Element::class);
+        $dom->registerNodeClass('DOM\Entity', DOM\Entity::class);
+        $dom->registerNodeClass('DOM\EntityReference', DOM\EntityReference::class);
+        $dom->registerNodeClass('DOM\Node', DOM\Node::class);
+        $dom->registerNodeClass('DOM\Notation', DOM\Notation::class);
+        $dom->registerNodeClass('DOM\ProcessingInstruction', DOM\ProcessingInstruction::class);
+        $dom->registerNodeClass('DOM\Text', DOM\Text::class);
     }
 }
