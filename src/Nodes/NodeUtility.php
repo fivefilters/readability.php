@@ -65,34 +65,11 @@ class NodeUtility
     }
 
     /**
-     * Changes the node tag name. Since tagName on DOMElement is a read only value, this must be done creating a new
-     * element with the new tag name and importing it to the main DOMDocument.
+     * Not in the DOM spec, but PHP 8.4 introduced rename() for DOM\Element and DOM\Attr
      */
-    public static function setNodeTag(Node|Element $node, string $value, bool $importAttributes = true): Node|Element
+    public static function setNodeTag(Element $element, string $newName): void
     {
-        $new = \Dom\HtmlDocument::createEmpty();
-        NodeUtility::registerReadabilityNodeClasses($new);
-        $new->appendChild($new->createElement($value));
-
-        $children = $node->childNodes;
-        /** @var $children \DOMNodeList $i */
-        for ($i = 0; $i < $children->length; $i++) {
-            $import = $new->importNode($children->item($i), true);
-            $new->firstChild->appendChild($import);
-        }
-
-        if ($importAttributes) {
-            // Import attributes from the original node.
-            foreach ($node->attributes as $attribute) {
-                $new->firstChild->setAttribute($attribute->nodeName, $attribute->nodeValue);
-            }
-        }
-
-        // The import must be done on the firstChild of $new, since $new is a DOMDocument and not a DOMElement.
-        $import = $node->ownerDocument->importNode($new->firstChild, true);
-        $node->parentNode->replaceChild($import, $node);
-
-        return $import;
+        $element->rename($element->namespaceURI, $newName);
     }
 
     /**
