@@ -31,7 +31,7 @@ trait NodeTrait
      */
     private bool $readabilityDataTable = false;
 
-    private const DIV_TO_P_ELEMENTS = [
+    private static array $DIV_TO_P_ELEMENTS = [
         'blockquote',
         'dl',
         'div',
@@ -47,7 +47,7 @@ trait NodeTrait
      * The commented out elements qualify as phrasing content but tend to be
      * removed by readability when put into paragraphs, so we ignore them here.
      */
-    private const PHRASING_ELEMS = [
+    private static array $PHRASING_ELEMS = [
         // 'CANVAS', 'IFRAME', 'SVG', 'VIDEO',
         'abbr', 'audio', 'b', 'bdo', 'br', 'button', 'cite', 'code', 'data',
         'datalist', 'dfn', 'em', 'embed', 'i', 'img', 'input', 'kbd', 'label',
@@ -374,7 +374,7 @@ trait NodeTrait
         $result = false;
         if ($this->hasChildNodes()) {
             foreach ($this->childNodes as $child) {
-                if (in_array($child->nodeName, self::DIV_TO_P_ELEMENTS)) {
+                if (in_array($child->nodeName, self::$DIV_TO_P_ELEMENTS)) {
                     $result = true;
                 } else {
                     // If any of the hasSingleChildBlockElement calls return true, return true then.
@@ -417,7 +417,7 @@ trait NodeTrait
      */
     public function isPhrasingContent(): bool
     {
-        return $this->nodeType === XML_TEXT_NODE || in_array($this->nodeName, self::PHRASING_ELEMS) !== false ||
+        return $this->nodeType === XML_TEXT_NODE || in_array($this->nodeName, self::$PHRASING_ELEMS) !== false ||
             (!is_null($this->childNodes) &&
                 ($this->nodeName === 'a' || $this->nodeName === 'del' || $this->nodeName === 'ins') &&
                 array_reduce(iterator_to_array($this->childNodes), function ($carry, $node) {
