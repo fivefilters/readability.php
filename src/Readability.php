@@ -275,7 +275,7 @@ class Readability
         if ($this->configuration->getParser() === 'html5') {
             $this->logger->debug('[Loading] Using HTML5 parser...');
             // New DOM class with HTML5 parser introduced in PHP 8.4
-            $dom = \Dom\HtmlDocument::createFromString($html, \Dom\HTML_NO_DEFAULT_NS | LIBXML_NOERROR);
+            $dom = \Dom\HtmlDocument::createFromString($html, LIBXML_NOERROR);
             NodeUtility::registerReadabilityNodeClasses($dom);
             //TODO: Improve this so it looks inside <html><head><base>, not just any <base>
             $base = $dom->getElementsByTagName('base');
@@ -897,7 +897,7 @@ class Readability
                     $elementsToScore[] = $node;
                 } elseif (!$node->hasSingleChildBlockElement()) {
                     $this->logger->debug(sprintf('[Get Nodes] Found DIV with a single child block element, converting to a P node. Node content is: \'%s\'', substr($node->textContent, 0, 128)));
-                    $node = NodeUtility::setNodeTag($node, 'p');
+                    NodeUtility::setNodeTag($node, 'p');
                     $elementsToScore[] = $node;
                 }
             }
@@ -1368,7 +1368,7 @@ class Readability
             $scoreThreshold = $lastScore / 3;
 
             /* @var Element $parentOfTopCandidate */
-            while ($parentOfTopCandidate && $parentOfTopCandidate->nodeName !== 'body') {
+            while ($parentOfTopCandidate && $parentOfTopCandidate->nodeName !== 'body' && $parentOfTopCandidate->nodeType === XML_ELEMENT_NODE) {
                 $parentScore = $parentOfTopCandidate->contentScore;
                 if ($parentScore < $scoreThreshold) {
                     break;
@@ -1456,7 +1456,7 @@ class Readability
                      * We have a node that isn't a common block level element, like a form or td tag.
                      * Turn it into a div so it doesn't get filtered out later by accident.
                      */
-                    $sibling = NodeUtility::setNodeTag($sibling, 'div');
+                    NodeUtility::setNodeTag($sibling, 'div');
                 }
 
                 $import = $articleContent->importNode($sibling, true);
@@ -1590,7 +1590,7 @@ class Readability
                 $row = $tbody->firstElementChild;
                 if ($row->hasSingleTagInsideElement('td')) {
                     $cell = $row->firstElementChild;
-                    $cell = NodeUtility::setNodeTag($cell, (array_reduce(iterator_to_array($cell->childNodes), function ($carry, $node) {
+                    NodeUtility::setNodeTag($cell, (array_reduce(iterator_to_array($cell->childNodes), function ($carry, $node) {
                         return $node->isPhrasingContent() && $carry;
                     }, true)) ? 'p' : 'div');
                     $table->parentNode->replaceChild($cell, $table);
