@@ -4,7 +4,7 @@ namespace fivefilters\Readability\Nodes\DOM;
 
 use fivefilters\Readability\Nodes\NodeTrait;
 
-class DOMText extends \DOMText
+class Entity extends \DOM\Entity
 {
     use NodeTrait;
 }

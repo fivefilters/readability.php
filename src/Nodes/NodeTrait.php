@@ -2,17 +2,16 @@
 
 namespace fivefilters\Readability\Nodes;
 
-use fivefilters\Readability\Nodes\DOM\DOMDocument;
-use fivefilters\Readability\Nodes\DOM\DOMElement;
-use fivefilters\Readability\Nodes\DOM\DOMNode;
-use fivefilters\Readability\Nodes\DOM\DOMText;
+use fivefilters\Readability\Nodes\DOM\Element;
+use fivefilters\Readability\Nodes\DOM\Node;
+use fivefilters\Readability\Nodes\DOM\Text;
 
 /**
- * @property ?DOMNode $firstChild
- * @property ?DOMNode $lastChild
- * @property ?DOMNode $parentNode
- * @property ?DOMNode $nextSibling
- * @property ?DOMNode $previousSibling
+ * @property ?Node $firstChild
+ * @property ?Node $lastChild
+ * @property ?Node $parentNode
+ * @property ?Node $nextSibling
+ * @property ?Node $previousSibling
  */
 trait NodeTrait
 {
@@ -31,7 +30,7 @@ trait NodeTrait
      */
     private bool $readabilityDataTable = false;
 
-    private array $divToPElements = [
+    private const DIV_TO_P_ELEMENTS = [
         'blockquote',
         'dl',
         'div',
@@ -47,7 +46,7 @@ trait NodeTrait
      * The commented out elements qualify as phrasing content but tend to be
      * removed by readability when put into paragraphs, so we ignore them here.
      */
-    private array $phrasing_elems = [
+    private const PHRASING_ELEMS = [
         // 'CANVAS', 'IFRAME', 'SVG', 'VIDEO',
         'abbr', 'audio', 'b', 'bdo', 'br', 'button', 'cite', 'code', 'data',
         'datalist', 'dfn', 'em', 'embed', 'i', 'img', 'input', 'kbd', 'label',
@@ -152,8 +151,8 @@ trait NodeTrait
      */
     public function getAttribute(string $attributeName): string
     {
-        if (!is_null($this->attributes)) {
-            return parent::getAttribute($attributeName);
+        if ($this instanceof \Dom\HtmlElement) {
+            return parent::getAttribute($attributeName) ?? '';
         }
 
         return '';
@@ -166,7 +165,7 @@ trait NodeTrait
      */
     public function hasAttribute(string $attributeName): bool
     {
-        if (!is_null($this->attributes)) {
+        if ($this instanceof \Dom\HtmlElement) {
             return parent::hasAttribute($attributeName);
         }
 
@@ -185,7 +184,7 @@ trait NodeTrait
 
         $node = $this->parentNode;
 
-        while ($node && !($node instanceof DOMDocument)) {
+        while ($node && !($node instanceof \Dom\HtmlDocument)) {
             $ancestors[] = $node;
             $level++;
             if ($level === $maxLevel) {
@@ -221,7 +220,7 @@ trait NodeTrait
         $links = $this->getAllLinks();
 
         if ($links) {
-            /** @var DOMElement $link */
+            /** @var Element $link */
             foreach ($links as $link) {
                 $href = $link->getAttribute('href');
                 $coefficient = ($href && preg_match(NodeUtility::$regexps['hashUrl'], $href)) ? 0.3 : 1;
@@ -273,12 +272,12 @@ trait NodeTrait
      */
     public function getTextContent(bool $normalize = true): string
     {
-        $nodeValue = trim($this->textContent);
+        $textContent = mb_trim($this->textContent);
         if ($normalize) {
-            $nodeValue = preg_replace(NodeUtility::$regexps['normalize'], ' ', $nodeValue);
+            $textContent = preg_replace(NodeUtility::$regexps['normalize'], ' ', $textContent);
         }
 
-        return $nodeValue;
+        return $textContent;
     }
 
     /**
@@ -289,7 +288,7 @@ trait NodeTrait
         $rows = $columns = 0;
         $trs = $this->getElementsByTagName('tr');
         foreach ($trs as $tr) {
-            /** @var \DOMElement $tr */
+            /** @var \DOM\Element $tr */
             $rowspan = $tr->getAttribute('rowspan');
             $rows += ($rowspan || 1);
 
@@ -297,7 +296,7 @@ trait NodeTrait
             $columnsInThisRow = 0;
             $cells = $tr->getElementsByTagName('td');
             foreach ($cells as $cell) {
-                /** @var \DOMElement $cell */
+                /** @var \DOM\Element $cell */
                 $colspan = $cell->getAttribute('colspan');
                 $columnsInThisRow += ($colspan || 1);
             }
@@ -310,10 +309,11 @@ trait NodeTrait
     /**
      * Creates a new node based on the text content of the original node.
      */
-    public function createNode(DOMNode $originalNode, string $tagName): DOMElement
+    public function createNode(Node $originalNode, string $tagName): Element
     {
         $text = $originalNode->getTextContent(false);
-        $newNode = $originalNode->ownerDocument->createElement($tagName, $text);
+        $newNode = $originalNode->ownerDocument->createElement($tagName);
+        $newNode->appendChild($originalNode->ownerDocument->createTextNode($text));
 
         return $newNode;
     }
@@ -367,18 +367,18 @@ trait NodeTrait
 
     /**
      * Check if the current element has a single child block element.
-     * Block elements are the ones defined in the divToPElements array.
+     * Block elements are the ones defined in the DIV_TO_P_ELEMENTS array.
      */
     public function hasSingleChildBlockElement(): bool
     {
         $result = false;
         if ($this->hasChildNodes()) {
             foreach ($this->childNodes as $child) {
-                if (in_array($child->nodeName, $this->divToPElements)) {
+                if (in_array($child->nodeName, self::DIV_TO_P_ELEMENTS)) {
                     $result = true;
                 } else {
                     // If any of the hasSingleChildBlockElement calls return true, return true then.
-                    /** @var $child DOMElement */
+                    /** @var $child Element */
                     $result = ($result || $child->hasSingleChildBlockElement());
                 }
             }
@@ -392,8 +392,8 @@ trait NodeTrait
      */
     public function isElementWithoutContent(): bool
     {
-        return $this instanceof DOMElement &&
-            mb_strlen(preg_replace(NodeUtility::$regexps['onlyWhitespace'], '', $this->textContent)) === 0 &&
+        return $this instanceof Element &&
+            mb_strlen(preg_replace(NodeUtility::$regexps['onlyWhitespace'], '', $this->textContent) ?? '') === 0 &&
             ($this->childNodes->length === 0 ||
                 $this->childNodes->length === $this->getElementsByTagName('br')->length + $this->getElementsByTagName('hr')->length
                 /*
@@ -405,7 +405,7 @@ trait NodeTrait
                  * mb_strlen in this chain of checks).
                  */
                 + count(array_filter(iterator_to_array($this->childNodes), function ($child) {
-                    return $child instanceof DOMText;
+                    return $child instanceof Text;
                 }))
 
             );
@@ -417,7 +417,7 @@ trait NodeTrait
      */
     public function isPhrasingContent(): bool
     {
-        return $this->nodeType === XML_TEXT_NODE || in_array($this->nodeName, $this->phrasing_elems) !== false ||
+        return $this->nodeType === XML_TEXT_NODE || in_array($this->nodeName, self::PHRASING_ELEMS) !== false ||
             (!is_null($this->childNodes) &&
                 ($this->nodeName === 'a' || $this->nodeName === 'del' || $this->nodeName === 'ins') &&
                 array_reduce(iterator_to_array($this->childNodes), function ($carry, $node) {
@@ -443,7 +443,7 @@ trait NodeTrait
      */
     public function isWhitespace(): bool
     {
-        return ($this->nodeType === XML_TEXT_NODE && $this->isWhitespaceInElementContent()) ||
+        return ($this->nodeType === XML_TEXT_NODE && mb_strlen(mb_trim($this->textContent)) === 0) ||
             ($this->nodeType === XML_ELEMENT_NODE && $this->nodeName === 'br');
     }
 
@@ -487,9 +487,9 @@ trait NodeTrait
     /**
      * Git first element child or null
      */
-    public function getFirstElementChild(): ?DOMElement
+    public function getFirstElementChild(): ?Element
     {
-        if ($this->nodeType === XML_ELEMENT_NODE || $this->nodeType === XML_DOCUMENT_NODE) {
+        if ($this->nodeType === XML_ELEMENT_NODE || $this->nodeType === XML_HTML_DOCUMENT_NODE) {
             return $this->firstElementChild;
         }
 

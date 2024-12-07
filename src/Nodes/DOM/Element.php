@@ -4,7 +4,7 @@ namespace fivefilters\Readability\Nodes\DOM;
 
 use fivefilters\Readability\Nodes\NodeTrait;
 
-class DOMElement extends \DOMElement
+class Element extends \DOM\HtmlElement
 {
     use NodeTrait;
 
@@ -13,9 +13,9 @@ class DOMElement extends \DOMElement
      *
      * To get all child nodes, including non-element nodes like text and comment nodes, use childNodes.
      */
-    public function children(): DOMNodeList
+    public function children(): NodeList
     {
-        $newList = new DOMNodeList();
+        $newList = new NodeList();
         foreach ($this->childNodes as $node) {
             if ($node->nodeType === XML_ELEMENT_NODE) {
                 $newList->add($node);
@@ -29,7 +29,7 @@ class DOMElement extends \DOMElement
      *
      * @deprecated Use previousElementSibling instead - introduced in PHP 8.0.
      */
-    public function previousElementSibling(): ?DOMElement
+    public function previousElementSibling(): ?Element
     {
         return $this->previousElementSibling;
     }

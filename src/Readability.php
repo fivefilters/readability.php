@@ -2,14 +2,12 @@
 
 namespace fivefilters\Readability;
 
-use fivefilters\Readability\Nodes\DOM\DOMDocument;
-use fivefilters\Readability\Nodes\DOM\DOMElement;
-use fivefilters\Readability\Nodes\DOM\DOMNode;
-use fivefilters\Readability\Nodes\DOM\DOMText;
-use fivefilters\Readability\Nodes\DOM\DOMComment;
+use fivefilters\Readability\Nodes\DOM\Element;
+use fivefilters\Readability\Nodes\DOM\Node;
+use fivefilters\Readability\Nodes\DOM\Text;
+use fivefilters\Readability\Nodes\DOM\Comment;
 use fivefilters\Readability\Nodes\NodeUtility;
 use Psr\Log\LoggerInterface;
-use Masterminds\HTML5;
 use League\Uri\BaseUri;
 
 /**
@@ -18,9 +16,9 @@ use League\Uri\BaseUri;
 class Readability
 {
     /**
-     * Main DOMDocument where all the magic happens.
+     * Main HtmlDocument where all the magic happens.
      */
-    protected DOMDocument $dom;
+    protected \Dom\HtmlDocument $dom;
 
     /**
      * Title of the article.
@@ -28,9 +26,9 @@ class Readability
     protected ?string $title = null;
 
     /**
-     * Final DOMDocument with the fully parsed HTML.
+     * Final HtmlDocument with the fully parsed HTML.
      */
-    protected ?DOMDocument $content = null;
+    protected ?\Dom\HtmlDocument $content = null;
 
     /**
      * Excerpt of the article.
@@ -59,7 +57,7 @@ class Readability
 
     /**
      * Base URI
-     * HTML5PHP doesn't appear to store it in the baseURI property like PHP's DOMDocument does when parsing with libxml
+     * HTML5PHP doesn't appear to store it in the baseURI property like PHP's HtmlDocument does when parsing with libxml
      */
     protected ?string $baseURI = null;
 
@@ -162,6 +160,7 @@ class Readability
 
             throw new ParseException('Invalid or incomplete HTML.');
         }
+        $root = $this->dom->getElementsByTagName('body')->item(0);
 
         $bodyCache = $root->cloneNode(true);
 
@@ -170,12 +169,11 @@ class Readability
         $this->getMainImage();
 
         while (true) {
-
-            $this->logger->debug('Starting parse loop');
+            $this->logger->debug('Starting parse loop (#' . count($this->attempts) . ')');
             //$root = $root->firstChild;
 
             $elementsToScore = $this->getNodes($root->firstChild);
-            $this->logger->debug(sprintf('Elements to score: \'%s\'', count($elementsToScore)));
+            $this->logger->debug(sprintf('Elements to score: %d', count($elementsToScore)));
 
             $result = $this->rateNodes($elementsToScore);
 
@@ -187,8 +185,7 @@ class Readability
              * finding the -right- content.
              */
 
-            $length = !$result ? 0 : mb_strlen(preg_replace(NodeUtility::$regexps['onlyWhitespace'], '', $result->textContent));
-
+            $length = !$result ? 0 : mb_strlen(preg_replace(NodeUtility::$regexps['onlyWhitespace'], '', $result->documentElement->textContent));
             $this->logger->info(sprintf('[Parsing] Article parsed. Amount of words: %s. Current threshold is: %s', $length, $this->configuration->getCharThreshold()));
 
             if ($result && $length < $this->configuration->getCharThreshold()) {
@@ -271,14 +268,15 @@ class Readability
         $this->logger->debug('[Loading] Loading HTML...');
 
         // To avoid throwing a gazillion of errors on malformed HTMLs
-        libxml_use_internal_errors(true);
+        //libxml_use_internal_errors(true);
 
         //$html = preg_replace('/(<br[^>]*>[ \n\r\t]*){2,}/i', '</p><p>', $html);
 
         if ($this->configuration->getParser() === 'html5') {
             $this->logger->debug('[Loading] Using HTML5 parser...');
-            $html5 = new HTML5(['disable_html_ns' => true, 'target_document' => new DOMDocument('1.0', 'utf-8')]);
-            $dom = $html5->loadHTML($html);
+            // New DOM class with HTML5 parser introduced in PHP 8.4
+            $dom = \Dom\HtmlDocument::createFromString($html, LIBXML_NOERROR);
+            NodeUtility::registerReadabilityNodeClasses($dom);
             //TODO: Improve this so it looks inside <html><head><base>, not just any <base>
             $base = $dom->getElementsByTagName('base');
             if ($base->length > 0) {
@@ -289,31 +287,9 @@ class Readability
                 }
             }
         } else {
-            $this->logger->debug('[Loading] Using libxml parser...');
-            $dom = new DOMDocument('1.0', 'utf-8');
-            if ($this->configuration->getNormalizeEntities()) {
-                $this->logger->debug('[Loading] Normalized entities via mb_convert_encoding.');
-                // Replace UTF-8 characters with the HTML Entity equivalent. Useful to fix html with mixed content
-                $html = mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8');
-            }
+            // Throw exception if the parser is not HTML5
+            throw new ParseException('This version of Readability.php only supports the HTML5 parser introduced in PHP 8.4');
         }
-
-        if (!$this->configuration->getSubstituteEntities()) {
-            // Keep the original HTML entities
-            $dom->substituteEntities = false;
-        }
-
-        if ($this->configuration->getSummonCthulhu()) {
-            $this->logger->debug('[Loading] Removed script tags via regex H̶͈̩̟̬̱͠E̡̨̬͔̳̜͢͠ ̡̧̯͉̩͙̩̹̞̠͎͈̹̥̠͞ͅͅC̶͉̞̘̖̝̗͓̬̯͍͉̤̬͢͢͞Ò̟̘͉͖͎͉̱̭̣̕M̴̯͈̻̱̱̣̗͈̠̙̲̥͘͞E̷̛͙̼̲͍͕̹͍͇̗̻̬̮̭̱̥͢Ş̛̟͔̙̜̤͇̮͍̙̝̀͘');
-            $html = preg_replace('/<script\b[^>]*>([\s\S]*?)<\/script>/', '', $html);
-        }
-
-        // Prepend the XML tag to avoid having issues with special characters. Should be harmless.
-        if ($this->configuration->getParser() !== 'html5') {
-            $dom->loadHTML('<?xml encoding="UTF-8">' . $html);
-            $this->baseURI = $dom->baseURI;
-        }
-        $dom->encoding = 'UTF-8';
 
         $this->logger->debug('[Loading] Loaded HTML successfully.');
 
@@ -326,7 +302,7 @@ class Readability
      *
      * @return array with any metadata that could be extracted (possibly none)
      */
-    private function getJSONLD(DOMDocument $dom): array
+    private function getJSONLD(\Dom\HtmlDocument $dom): array
     {
         $scripts = $this->_getAllNodesWithTag($dom, ['script']);
 
@@ -418,7 +394,7 @@ class Readability
             /* @var DOMNode $meta */
             $elementName = $meta->getAttribute('name');
             $elementProperty = $meta->getAttribute('property');
-            $content = $meta->getAttribute('content'); 
+            $content = $meta->getAttribute('content');
             $matches = null;
             $name = null;
 
@@ -597,7 +573,7 @@ class Readability
     /**
      * Remove unnecessary nested elements
      */
-    private function simplifyNestedElements(DOMDocument $article): void
+    private function simplifyNestedElements(\Dom\HtmlDocument $article): void
     {
         $node = $article;
 
@@ -635,8 +611,8 @@ class Readability
             $this->logger->debug('[Metadata] Could not find title in metadata, searching for the title tag...');
             $titleTag = $this->dom->getElementsByTagName('title');
             if ($titleTag->length > 0) {
-                $this->logger->info(sprintf('[Metadata] Using title tag as article title: \'%s\'', $titleTag->item(0)->nodeValue));
-                $originalTitle = $titleTag->item(0)->nodeValue;
+                $this->logger->info(sprintf('[Metadata] Using title tag as article title: \'%s\'', $titleTag->item(0)->textContent));
+                $originalTitle = $titleTag->item(0)->textContent;
             }
         }
 
@@ -672,7 +648,7 @@ class Readability
             for ($i = 1; $i <= 2; $i++) {
                 foreach ($this->dom->getElementsByTagName('h' . $i) as $hTag) {
                     // Trim texts to avoid having false negatives when the title is surrounded by spaces or tabs
-                    if (trim($hTag->nodeValue) === trim($curTitle)) {
+                    if (trim($hTag->textContent) === trim($curTitle)) {
                         $match = true;
                     }
                 }
@@ -698,7 +674,7 @@ class Readability
             $hOnes = $this->dom->getElementsByTagName('h1');
 
             if ($hOnes->length === 1) {
-                $curTitle = $hOnes->item(0)->nodeValue;
+                $curTitle = $hOnes->item(0)->textContent;
                 $this->logger->info(sprintf('[Metadata] Using title from an H1 node: \'%s\'', $curTitle));
             }
         }
@@ -795,7 +771,7 @@ class Readability
     /**
      * Gets nodes from the root element.
      */
-    private function getNodes(DOMNode|DOMComment|DOMText|DOMElement|null $node): array
+    private function getNodes(Node|Comment|Text|Element|null $node): array
     {
         $this->logger->info('[Get Nodes] Retrieving nodes...');
         if ($node === null) {
@@ -817,7 +793,7 @@ class Readability
         while ($node) {
             // Remove DOMComments nodes as we don't need them and mess up children counting
             if ($node->nodeType === XML_COMMENT_NODE) {
-                $this->logger->debug(sprintf('[Get Nodes] Found comment node, removing... Node content was: \'%s\'', substr($node->nodeValue, 0, 128)));
+                $this->logger->debug(sprintf('[Get Nodes] Found comment node, removing... Node content was: \'%s\'', substr($node->textContent, 0, 128)));
                 $node = NodeUtility::removeAndGetNext($node);
                 continue;
             }
@@ -832,7 +808,7 @@ class Readability
 
             // Check to see if this node is a byline, and remove it if it is.
             if ($this->checkByline($node, $matchString)) {
-                $this->logger->debug(sprintf('[Get Nodes] Found byline, removing... Node content was: \'%s\'', substr($node->nodeValue, 0, 128)));
+                $this->logger->debug(sprintf('[Get Nodes] Found byline, removing... Node content was: \'%s\'', substr($node->textContent, 0, 128)));
                 $node = NodeUtility::removeAndGetNext($node);
                 continue;
             }
@@ -854,7 +830,7 @@ class Readability
                     $node->nodeName !== 'body' &&
                     $node->nodeName !== 'a'
                 ) {
-                    $this->logger->debug(sprintf('[Get Nodes] Removing unlikely candidate. Node content was: \'%s\'', substr($node->nodeValue, 0, 128)));
+                    $this->logger->debug(sprintf('[Get Nodes] Removing unlikely candidate. Node content was: \'%s\'', substr($node->textContent, 0, 128)));
                     $node = NodeUtility::removeAndGetNext($node);
                     continue;
                 }
@@ -878,7 +854,7 @@ class Readability
             }
 
             if (in_array(strtolower($node->nodeName), $this->defaultTagsToScore)) {
-                $this->logger->debug(sprintf('[Get Nodes] Adding node to score list, node content is: \'%s\'', substr($node->nodeValue, 0, 128)));
+                $this->logger->debug(sprintf('[Get Nodes] Adding node to score list, node content is: \'%s\'', substr($node->textContent, 0, 128)));
                 $elementsToScore[] = $node;
             }
 
@@ -914,14 +890,14 @@ class Readability
                  * algorithm with DIVs with are, in practice, paragraphs.
                  */
                 if ($node->hasSingleTagInsideElement('p') && $node->getLinkDensity() < 0.25) {
-                    $this->logger->debug(sprintf('[Get Nodes] Found DIV with a single P node, removing DIV. Node content is: \'%s\'', substr($node->nodeValue, 0, 128)));
+                    $this->logger->debug(sprintf('[Get Nodes] Found DIV with a single P node, removing DIV. Node content is: \'%s\'', substr($node->textContent, 0, 128)));
                     $pNode = NodeUtility::filterTextNodes($node->childNodes)->item(0);
                     $node->parentNode->replaceChild($pNode, $node);
                     $node = $pNode;
                     $elementsToScore[] = $node;
                 } elseif (!$node->hasSingleChildBlockElement()) {
-                    $this->logger->debug(sprintf('[Get Nodes] Found DIV with a single child block element, converting to a P node. Node content is: \'%s\'', substr($node->nodeValue, 0, 128)));
-                    $node = NodeUtility::setNodeTag($node, 'p');
+                    $this->logger->debug(sprintf('[Get Nodes] Found DIV with a single child block element, converting to a P node. Node content is: \'%s\'', substr($node->textContent, 0, 128)));
+                    NodeUtility::setNodeTag($node, 'p');
                     $elementsToScore[] = $node;
                 }
             }
@@ -960,7 +936,7 @@ class Readability
     /**
      * Checks if the node is a byline.
      */
-    private function checkByline(DOMNode|DOMText|DOMElement $node, string $matchString): bool
+    private function checkByline(Node|Text|Element $node, string $matchString): bool
     {
         if (!$this->configuration->getArticleByline()) {
             return false;
@@ -1030,7 +1006,7 @@ class Readability
      * Check if node is image, or if node contains exactly only one image
      * whether as a direct child or as its descendants.
      */
-    private function isSingleImage(DOMElement|DOMNode|DOMText $node): bool
+    private function isSingleImage(Element|Node|Text $node): bool
     {
         if ($node->tagName === 'img') {
             return true;
@@ -1049,7 +1025,7 @@ class Readability
      * and remove the <noscript> tag. This improves the quality of the images we use on
      * some sites (e.g. Medium).
      */
-    private function unwrapNoscriptImages(DOMDocument $dom): void
+    private function unwrapNoscriptImages(\Dom\HtmlDocument $dom): void
     {
         // Find img without source or attributes that might contains image, and remove it.
         // This is done to prevent a placeholder img is replaced by img from noscript in next step.
@@ -1125,7 +1101,7 @@ class Readability
     /**
      * Removes all the scripts of the html.
      */
-    private function removeScripts(DOMDocument $dom): void
+    private function removeScripts(\Dom\HtmlDocument $dom): void
     {
         foreach (['script', 'noscript'] as $tag) {
             $nodes = $dom->getElementsByTagName($tag);
@@ -1138,11 +1114,11 @@ class Readability
     /**
      * Prepares the document for parsing.
      */
-    private function prepDocument(DOMDocument $dom): void
+    private function prepDocument(\Dom\HtmlDocument $dom): void
     {
         $this->logger->info('[PrepDocument] Preparing document for parsing...');
 
-        foreach ($dom->shiftingAwareGetElementsByTagName('br') as $br) {
+        foreach ($dom->documentElement->shiftingAwareGetElementsByTagName('br') as $br) {
             $next = $br->nextSibling;
 
             /*
@@ -1225,15 +1201,15 @@ class Readability
     /**
      * Assign scores to each node. Returns full article parsed or false on error.
      */
-    private function rateNodes(array $nodes): DOMDocument|bool
+    private function rateNodes(array $nodes): \Dom\HtmlDocument|bool
     {
         $this->logger->info('[Rating] Rating nodes...');
 
         $candidates = [];
 
-        /** @var DOMElement $node */
+        /** @var Element $node */
         foreach ($nodes as $node) {
-            if (is_null($node->parentNode)) {
+            if (is_null($node->parentElement)) {
                 continue;
             }
 
@@ -1258,9 +1234,9 @@ class Readability
             // For every 100 characters in this paragraph, add another point. Up to 3 points.
             $contentScore += min(floor(mb_strlen($node->getTextContent(true)) / 100), 3);
 
-            $this->logger->debug(sprintf('[Rating] Node score %s, content: \'%s\'', $contentScore, substr($node->nodeValue, 0, 128)));
+            $this->logger->debug(sprintf('[Rating] Node score %s, content: \'%s\'', $contentScore, substr($node->textContent, 0, 128)));
 
-            /** @var $ancestor DOMElement */
+            /** @var $ancestor Element */
             foreach ($ancestors as $level => $ancestor) {
                 $this->logger->debug('[Rating] Found ancestor, initializing and adding it as a candidate...');
                 if (!$ancestor->isInitialized()) {
@@ -1286,7 +1262,7 @@ class Readability
                 $currentScore = $ancestor->contentScore;
                 $ancestor->contentScore = $currentScore + ($contentScore / $scoreDivider);
 
-                $this->logger->debug(sprintf('[Rating] Ancestor score %s, value: \'%s\'', $ancestor->contentScore, substr($ancestor->nodeValue, 0, 128)));
+                $this->logger->debug(sprintf('[Rating] Ancestor score %s, value: \'%s\'', $ancestor->contentScore, substr($ancestor->textContent, 0, 128)));
             }
         }
 
@@ -1331,9 +1307,9 @@ class Readability
             $this->logger->info('[Rating] No top candidate found or top candidate is the body tag. Moving all child nodes to a new DIV node.');
 
             // Move all of the page's children into topCandidate
-            $topCandidate = new DOMDocument('1.0', 'utf-8');
-            $topCandidate->encoding = 'UTF-8';
-            $topCandidate->appendChild($topCandidate->createElement('div', ''));
+            $topCandidate = \Dom\HtmlDocument::createEmpty();
+            NodeUtility::registerReadabilityNodeClasses($topCandidate);
+            $topCandidate->appendChild($topCandidate->createElement('div'));
             $kids = $this->dom->getElementsByTagName('body')->item(0)->childNodes;
 
             // Cannot be foreached, don't ask me why.
@@ -1342,7 +1318,7 @@ class Readability
                 $topCandidate->firstChild->appendChild($import);
             }
 
-            // Candidate must be created using firstChild to grab the DOMElement instead of the DOMDocument.
+            // Candidate must be created using firstChild to grab the Element instead of the HtmlDocument.
             $topCandidate = $topCandidate->firstChild;
         } elseif ($topCandidate) {
             $this->logger->info(sprintf('[Rating] Found top candidate, score: %s', $topCandidate->contentScore));
@@ -1361,7 +1337,7 @@ class Readability
             if (count($alternativeCandidateAncestors) >= $MINIMUM_TOPCANDIDATES) {
                 $parentOfTopCandidate = $topCandidate->parentNode;
 
-                // Check if we are actually dealing with a DOMNode and not a DOMDocument node or higher
+                // Check if we are actually dealing with a DOMNode and not a HtmlDocument node or higher
                 while ($parentOfTopCandidate && $parentOfTopCandidate->nodeName !== 'body' && $parentOfTopCandidate->nodeType === XML_ELEMENT_NODE) {
                     $listsContainingThisAncestor = 0;
                     for ($ancestorIndex = 0; $ancestorIndex < count($alternativeCandidateAncestors) && $listsContainingThisAncestor < $MINIMUM_TOPCANDIDATES; $ancestorIndex++) {
@@ -1391,8 +1367,8 @@ class Readability
             // The scores shouldn't get too low.
             $scoreThreshold = $lastScore / 3;
 
-            /* @var DOMElement $parentOfTopCandidate */
-            while ($parentOfTopCandidate && $parentOfTopCandidate->nodeName !== 'body') {
+            /* @var Element $parentOfTopCandidate */
+            while ($parentOfTopCandidate && $parentOfTopCandidate->nodeName !== 'body' && $parentOfTopCandidate->nodeType === XML_ELEMENT_NODE) {
                 $parentScore = $parentOfTopCandidate->contentScore;
                 if ($parentScore < $scoreThreshold) {
                     break;
@@ -1425,8 +1401,9 @@ class Readability
 
         $this->logger->info('[Rating] Creating final article content document...');
 
-        $articleContent = new DOMDocument('1.0', 'utf-8');
-        $articleContent->createElement('div');
+        $articleContent = \Dom\HtmlDocument::createEmpty();
+        NodeUtility::registerReadabilityNodeClasses($articleContent);
+        $articleElement = $articleContent->appendChild($articleContent->createElement('article'));
 
         $siblingScoreThreshold = max(10, $topCandidate->contentScore * 0.2);
         // Keep potential top candidate's parent node to try to get text direction of it later.
@@ -1437,7 +1414,7 @@ class Readability
 
         $this->logger->info('[Rating] Adding top candidate siblings...');
 
-        /* @var DOMElement $sibling */
+        /* @var Element $sibling */
         // Can't foreach here because down there we might change the tag name and that causes the foreach to skip items
         for ($i = 0; $i < ($siblings->length ?? 0); $i++) {
             $sibling = $siblings[$i];
@@ -1470,7 +1447,7 @@ class Readability
             }
 
             if ($append) {
-                $this->logger->debug(sprintf('[Rating] Appending sibling to final article, content is: \'%s\'', substr($sibling->nodeValue, 0, 128)));
+                $this->logger->debug(sprintf('[Rating] Appending sibling to final article, content is: \'%s\'', substr($sibling->textContent, 0, 128)));
 
                 $hasContent = true;
 
@@ -1479,15 +1456,15 @@ class Readability
                      * We have a node that isn't a common block level element, like a form or td tag.
                      * Turn it into a div so it doesn't get filtered out later by accident.
                      */
-                    $sibling = NodeUtility::setNodeTag($sibling, 'div');
+                    NodeUtility::setNodeTag($sibling, 'div');
                 }
 
                 $import = $articleContent->importNode($sibling, true);
-                $articleContent->appendChild($import);
+                $articleElement->appendChild($import);
 
                 /*
                  * No node shifting needs to be check because when calling getChildren, an array is made with the
-                 * children of the parent node, instead of using the DOMElement childNodes function, which, when used
+                 * children of the parent node, instead of using the Element childNodes function, which, when used
                  * along with appendChild, would shift the nodes position and the current foreach will behave in
                  * unpredictable ways.
                  */
@@ -1497,6 +1474,9 @@ class Readability
         if ($hasContent) {
             $articleContent = $this->prepArticle($articleContent);
             // Find out text direction from ancestors of final top candidate.
+            if ($parentOfTopCandidate->nodeType === XML_HTML_DOCUMENT_NODE) {
+                $parentOfTopCandidate = $parentOfTopCandidate->documentElement;
+            }
             $ancestors = array_merge([$parentOfTopCandidate, $topCandidate], $parentOfTopCandidate->getNodeAncestors());
             foreach ($ancestors as $ancestor) {
                 $articleDir = $ancestor->getAttribute('dir');
@@ -1516,7 +1496,7 @@ class Readability
     /**
      * Cleans up the final article.
      */
-    public function prepArticle(DOMDocument $article): DOMDocument
+    public function prepArticle(\Dom\HtmlDocument $article): \Dom\HtmlDocument
     {
         $this->logger->info('[PrepArticle] Preparing final article...');
 
@@ -1603,14 +1583,14 @@ class Readability
         }
 
         // Remove single-cell tables
-        foreach ($article->shiftingAwareGetElementsByTagName('table') as $table) {
-            /** @var DOMElement $table */
+        foreach ($article->documentElement->shiftingAwareGetElementsByTagName('table') as $table) {
+            /** @var Element $table */
             $tbody = $table->hasSingleTagInsideElement('tbody') ? $table->firstElementChild : $table;
             if ($tbody->hasSingleTagInsideElement('tr')) {
                 $row = $tbody->firstElementChild;
                 if ($row->hasSingleTagInsideElement('td')) {
                     $cell = $row->firstElementChild;
-                    $cell = NodeUtility::setNodeTag($cell, (array_reduce(iterator_to_array($cell->childNodes), function ($carry, $node) {
+                    NodeUtility::setNodeTag($cell, (array_reduce(iterator_to_array($cell->childNodes), function ($carry, $node) {
                         return $node->isPhrasingContent() && $carry;
                     }, true)) ? 'p' : 'div');
                     $table->parentNode->replaceChild($cell, $table);
@@ -1626,11 +1606,11 @@ class Readability
      * similar checks as
      * https://dxr.mozilla.org/mozilla-central/rev/71224049c0b52ab190564d3ea0eab089a159a4cf/accessible/html/HTMLTableAccessible.cpp#920.
      */
-    public function _markDataTables(DOMDocument $article): void
+    public function _markDataTables(\Dom\HtmlDocument $article): void
     {
         $tables = $article->getElementsByTagName('table');
         foreach ($tables as $table) {
-            /** @var DOMElement $table */
+            /** @var Element $table */
             $role = $table->getAttribute('role');
             if ($role === 'presentation') {
                 $table->setReadabilityDataTable(false);
@@ -1680,7 +1660,7 @@ class Readability
     /**
      * convert images and figures that have properties like data-src into images that can be loaded without JS
      */
-    public function _fixLazyImages(DOMDocument $article): void
+    public function _fixLazyImages(\Dom\HtmlDocument $article): void
     {
         $images = $this->_getAllNodesWithTag($article, ['img', 'picture', 'figure']);
         foreach ($images as $elem) {
@@ -1754,7 +1734,7 @@ class Readability
     /**
      * Remove the style attribute on every e and under.
      **/
-    public function _cleanStyles(DOMDocument|DOMNode|DOMElement|DOMText $node): void
+    public function _cleanStyles(\Dom\HtmlDocument|Node|Element|Text $node): void
     {
         if (property_exists($node, 'tagName') && $node->tagName === 'svg') {
             return;
@@ -1785,10 +1765,10 @@ class Readability
     /**
      * Clean out elements that match the specified conditions
      *
-     * @param $node DOMElement Node to clean
+     * @param $node Element Node to clean
      * @param $filter callable Function determines whether a node should be removed
      **/
-    public function _cleanMatchedNodes(DOMElement $node, callable $filter): void
+    public function _cleanMatchedNodes(Element $node, callable $filter): void
     {
         $endOfSearchMarkerNode = NodeUtility::getNextNode($node, true);
         $next = NodeUtility::getNextNode($node);
@@ -1805,7 +1785,7 @@ class Readability
     /**
      * Clean extra paragraphs.
      */
-    public function _cleanExtraParagraphs(DOMDocument $article): void
+    public function _cleanExtraParagraphs(\Dom\HtmlDocument $article): void
     {
         $paragraphs = $this->_getAllNodesWithTag($article, ['p']);
         $length = count($paragraphs);
@@ -1843,10 +1823,10 @@ class Readability
     /**
      * Clean conditionally.
      *
-     * @param DOMDocument $article
+     * @param HtmlDocument $article
      * @param string $tag Tag to clean conditionally
      */
-    public function _cleanConditionally(DOMDocument $article, string $tag): void
+    public function _cleanConditionally(\Dom\HtmlDocument $article, string $tag): void
     {
         if (!$this->configuration->getCleanConditionally()) {
             return;
@@ -1861,7 +1841,7 @@ class Readability
         $allNodesWithTag = $this->_getAllNodesWithTag($article, [$tag]);
         $length = count($allNodesWithTag);
         for ($i = 0; $i < $length; $i++) {
-            /** @var $node DOMElement */
+            /** @var $node Element */
             $node = $allNodesWithTag[$length - 1 - $i];
 
             $isList = in_array($tag, ['ul', 'ol']);
@@ -1978,10 +1958,10 @@ class Readability
      * Clean a node of all elements of type "tag".
      * (Unless it's a youtube/vimeo video. People love movies.).
      *
-     * @param $article DOMDocument
+     * @param $article HtmlDocument
      * @param $tag string tag to clean
      **/
-    public function _clean(DOMDocument $article, string $tag): void
+    public function _clean(\Dom\HtmlDocument $article, string $tag): void
     {
         $isEmbed = in_array($tag, ['object', 'embed', 'iframe']);
 
@@ -2017,10 +1997,10 @@ class Readability
     /**
      * Clean out spurious headers from an Element.
      **/
-    public function _cleanHeaders(DOMDocument $article): void
+    public function _cleanHeaders(\Dom\HtmlDocument $article): void
     {
         $headingNodes = $this->_getAllNodesWithTag($article, ['h1', 'h2']);
-        /** @var $header DOMElement */
+        /** @var $header Element */
         foreach ($headingNodes as $header) {
             $weight = 0;
             if ($this->configuration->getWeightClasses()) {
@@ -2029,7 +2009,7 @@ class Readability
             $shouldRemove = $weight < 0;
 
             if ($shouldRemove) {
-                $this->logger->debug(sprintf('[PrepArticle] Removing H node with 0 or less weight. Content was: \'%s\'', substr($header->nodeValue, 0, 128)));
+                $this->logger->debug(sprintf('[PrepArticle] Removing H node with 0 or less weight. Content was: \'%s\'', substr($header->textContent, 0, 128)));
 
                 NodeUtility::removeNode($header);
             }
@@ -2040,10 +2020,10 @@ class Readability
      * Check if this node is an H1 or H2 element whose content is mostly
      * the same as the article title.
      *
-     * @param DOMNode the node to check.
+     * @param Node the node to check.
      * @return boolean indicating whether this is a title-like header.
      */
-    private function headerDuplicatesTitle(DOMNode|DOMText|DOMElement $node): bool
+    private function headerDuplicatesTitle(Node|Text|Element $node): bool
     {
         if ($node->nodeName !== 'h1' && $node->nodeName !== 'h2') {
             return false;
@@ -2063,9 +2043,13 @@ class Readability
      * Readability.js has a special filter to avoid cleaning the classes that the algorithm adds. We don't add classes
      * here so no need to filter those.
      **/
-    public function _cleanClasses(DOMDocument|DOMText|DOMNode|DOMElement $node): void
+    public function _cleanClasses(\Dom\HtmlDocument|Text|Node|Element $node): void
     {
-        if ($node->hasAttribute('class')) {
+        if ($node->nodeType === XML_HTML_DOCUMENT_NODE) {
+            $node = $node->documentElement;
+        }
+
+        if ($node->nodeType === XML_ELEMENT_NODE && $node->hasAttribute('class')) {
             $node->removeAttribute('class');
         }
 
@@ -2077,14 +2061,14 @@ class Readability
     /**
      * Post process content.
      */
-    public function postProcessContent(DOMDocument $article): DOMDocument
+    public function postProcessContent(\Dom\HtmlDocument $article): \Dom\HtmlDocument
     {
         $this->logger->info('[PostProcess] PostProcessing content...');
 
         // Readability cannot open relative uris so we convert them to absolute uris.
         if ($this->configuration->getFixRelativeURLs()) {
             foreach (iterator_to_array($article->getElementsByTagName('a')) as $link) {
-                /** @var DOMElement $link */
+                /** @var Element $link */
                 $href = $link->getAttribute('href');
                 if ($href) {
                     // Remove links with javascript: URIs, since
@@ -2182,7 +2166,7 @@ class Readability
      * @param  array nodeList The NodeList.
      * @param  callable fn    The test function.
      */
-    private function findNode(array $nodeList, callable $fn): DOMNode|DOMText|DOMElement|null
+    private function findNode(array $nodeList, callable $fn): Node|Text|Element|null
     {
         foreach ($nodeList as $node) {
             if ($fn($node)) {
@@ -2221,20 +2205,18 @@ class Readability
      */
     public function getContent(): ?string
     {
-        if ($this->content instanceof DOMDocument) {
-            $html5 = new HTML5(['disable_html_ns' => true]);
-            // by using childNodes below we make sure HTML5PHP's serialiser
-            // doesn't output the <!DOCTYPE html> string at the start.
-            return $html5->saveHTML($this->content->childNodes);
+        if ($this->content instanceof \Dom\HtmlDocument) {
+            // Does this do HTML5 serialisation?
+            return $this->content->saveHtml();
         } else {
             return null;
         }
     }
 
     /**
-     * Return DOMDocument holding either only the content or the whole document.
+     * Return HtmlDocument holding either only the content or the whole document.
      */
-    public function getDOMDocument(bool $contentOnly = true): ?DOMDocument
+    public function getDOMDocument(bool $contentOnly = true): ?\Dom\HtmlDocument
     {
         if ($contentOnly) {
             return $this->content;
@@ -2246,7 +2228,7 @@ class Readability
     /**
      * Set content.
      */
-    protected function setContent(DOMDocument $content): void
+    protected function setContent(\Dom\HtmlDocument $content): void
     {
         $this->content = $content;
     }

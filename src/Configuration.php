@@ -20,7 +20,6 @@ class Configuration
     protected bool $cleanConditionally = true;
     protected bool $weightClasses = true;
     protected bool $fixRelativeURLs = false;
-    protected bool $substituteEntities = false;
     protected bool $normalizeEntities = false;
     protected bool $summonCthulhu = false;
     protected string $originalURL = 'http://fakehost';
@@ -207,24 +206,6 @@ class Configuration
     }
 
     /**
-     * Get substitute entities.
-     */
-    public function getSubstituteEntities(): bool
-    {
-        return $this->substituteEntities;
-    }
-
-    /**
-     * Set substitute entities.
-     */
-    public function setSubstituteEntities(bool $substituteEntities): Configuration
-    {
-        $this->substituteEntities = $substituteEntities;
-
-        return $this;
-    }
-
-    /**
      * Get normalize entities.
      */
     public function getNormalizeEntities(): bool
@@ -273,7 +254,11 @@ class Configuration
      */
     public function setParser(string $parser): Configuration
     {
-        $this->parser = $parser;
+        if ($parser !== 'html5') {
+            throw new \InvalidArgumentException('This version of Readability.php only supports the HTML5 parser introduced in PHP 8.4');
+        } else {
+            $this->parser = $parser;
+        }
 
         return $this;
     }

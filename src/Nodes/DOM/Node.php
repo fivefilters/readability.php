@@ -4,7 +4,11 @@ namespace fivefilters\Readability\Nodes\DOM;
 
 use fivefilters\Readability\Nodes\NodeTrait;
 
-class DOMEntityReference extends \DOMEntityReference
+/**
+ * @method getAttribute($attribute)
+ * @method hasAttribute($attribute)
+ */
+class Node extends \DOM\Node
 {
     use NodeTrait;
 }
