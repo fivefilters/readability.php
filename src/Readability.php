@@ -5,6 +5,7 @@ namespace fivefilters\Readability;
 use fivefilters\Readability\Nodes\DOM\DOMDocument;
 use fivefilters\Readability\Nodes\DOM\DOMElement;
 use fivefilters\Readability\Nodes\DOM\DOMNode;
+use fivefilters\Readability\Nodes\DOM\DOMProcessingInstruction;
 use fivefilters\Readability\Nodes\DOM\DOMText;
 use fivefilters\Readability\Nodes\DOM\DOMComment;
 use fivefilters\Readability\Nodes\NodeUtility;
@@ -391,7 +392,7 @@ class Readability
                 return $metadata;
             } catch (\Exception $err) {
                 // The try-catch blocks are from the JS version. Not sure if there's anything
-                // here in the PHP version that would trigger an error or exception, so perhaps we can 
+                // here in the PHP version that would trigger an error or exception, so perhaps we can
                 // remove the try-catch blocks here (or at least translate errors to exceptions for this bit)
                 $this->logger->debug('[JSON-LD] Error parsing: ' . $err->getMessage());
             }
@@ -418,7 +419,7 @@ class Readability
             /* @var DOMNode $meta */
             $elementName = $meta->getAttribute('name');
             $elementProperty = $meta->getAttribute('property');
-            $content = $meta->getAttribute('content'); 
+            $content = $meta->getAttribute('content');
             $matches = null;
             $name = null;
 
@@ -960,7 +961,7 @@ class Readability
     /**
      * Checks if the node is a byline.
      */
-    private function checkByline(DOMNode|DOMText|DOMElement $node, string $matchString): bool
+    private function checkByline(DOMNode|DOMText|DOMElement|DOMProcessingInstruction $node, string $matchString): bool
     {
         if (!$this->configuration->getArticleByline()) {
             return false;
@@ -2043,7 +2044,7 @@ class Readability
      * @param DOMNode the node to check.
      * @return boolean indicating whether this is a title-like header.
      */
-    private function headerDuplicatesTitle(DOMNode|DOMText|DOMElement $node): bool
+    private function headerDuplicatesTitle(DOMNode|DOMText|DOMElement|DOMProcessingInstruction $node): bool
     {
         if ($node->nodeName !== 'h1' && $node->nodeName !== 'h2') {
             return false;
