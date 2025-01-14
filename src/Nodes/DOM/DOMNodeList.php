@@ -42,7 +42,7 @@ class DOMNodeList implements \Countable, \IteratorAggregate
     /**
      * Add node to the list.
      */
-    public function add(DOMNode|DOMElement|DOMText|DOMComment $node): DOMNodeList
+    public function add(DOMNode|DOMElement|DOMText|DOMComment|DOMProcessingInstruction $node): DOMNodeList
     {
         $this->items[] = $node;
         $this->length++;
@@ -53,7 +53,7 @@ class DOMNodeList implements \Countable, \IteratorAggregate
     /**
      * Get node.
      */
-    public function item(int $offset): DOMNode|DOMElement|DOMText|DOMComment
+    public function item(int $offset): DOMNode|DOMElement|DOMText|DOMComment|DOMProcessingInstruction
     {
         return $this->items[$offset];
     }
