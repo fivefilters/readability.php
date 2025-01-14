@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [v3.3.1](https://github.com/fivefilters/readability.php/releases/tag/v3.3.1)
+- Fix DOMProcessingInstruction errors
+
 ## [v3.3.0](https://github.com/fivefilters/readability.php/releases/tag/v3.3.0)
 - Fixed PHP 8.4 deprecation warning (reported by @pich)
 - Migrated type declarations from PHPDoc blocks to native PHP 8 property and method types
