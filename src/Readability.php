@@ -8,6 +8,7 @@ use fivefilters\Readability\Nodes\DOM\DOMNode;
 use fivefilters\Readability\Nodes\DOM\DOMProcessingInstruction;
 use fivefilters\Readability\Nodes\DOM\DOMText;
 use fivefilters\Readability\Nodes\DOM\DOMComment;
+use fivefilters\Readability\Nodes\DOM\DOMCdataSection;
 use fivefilters\Readability\Nodes\NodeUtility;
 use Psr\Log\LoggerInterface;
 use Masterminds\HTML5;
@@ -961,7 +962,7 @@ class Readability
     /**
      * Checks if the node is a byline.
      */
-    private function checkByline(DOMNode|DOMText|DOMElement|DOMProcessingInstruction $node, string $matchString): bool
+    private function checkByline(DOMNode|DOMText|DOMElement|DOMProcessingInstruction|DOMCdataSection $node, string $matchString): bool
     {
         if (!$this->configuration->getArticleByline()) {
             return false;
@@ -1755,7 +1756,7 @@ class Readability
     /**
      * Remove the style attribute on every e and under.
      **/
-    public function _cleanStyles(DOMDocument|DOMNode|DOMElement|DOMText $node): void
+    public function _cleanStyles(DOMDocument|DOMNode|DOMElement|DOMText|DOMProcessingInstruction|DOMCdataSection $node): void
     {
         if (property_exists($node, 'tagName') && $node->tagName === 'svg') {
             return;

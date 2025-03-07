@@ -9,6 +9,7 @@ use fivefilters\Readability\Nodes\DOM\DOMProcessingInstruction;
 use fivefilters\Readability\Nodes\DOM\DOMText;
 use fivefilters\Readability\Nodes\DOM\DOMComment;
 use fivefilters\Readability\Nodes\DOM\DOMNodeList;
+use fivefilters\Readability\Nodes\DOM\DOMCdataSection;
 
 /**
  * Class NodeUtility.
@@ -121,7 +122,7 @@ class NodeUtility
      * Returns the next node. First checks for children (if the flag allows it), then for siblings, and finally
      * for parents.
      */
-    public static function getNextNode(DOMNode|DOMComment|DOMText|DOMElement|DOMDocument|DOMProcessingInstruction $originalNode, bool $ignoreSelfAndKids = false): DOMNode|DOMComment|DOMText|DOMElement|DOMDocument|DOMProcessingInstruction|null
+    public static function getNextNode(DOMNode|DOMComment|DOMText|DOMElement|DOMDocument|DOMProcessingInstruction|DOMCdataSection $originalNode, bool $ignoreSelfAndKids = false): DOMNode|DOMComment|DOMText|DOMElement|DOMDocument|DOMProcessingInstruction|DOMCdataSection|null
     {
         /*
          * Traverse the DOM from node to node, starting at the node passed in.
