@@ -99,7 +99,7 @@ class NodeUtility
     /**
      * Removes the current node and returns the next node to be parsed (child, sibling or parent).
      */
-    public static function removeAndGetNext(DOMNode|DOMComment|DOMText|DOMElement $node): DOMNode|DOMComment|DOMText|DOMElement|null
+    public static function removeAndGetNext(DOMNode|DOMComment|DOMText|DOMElement|DOMProcessingInstruction $node): DOMNode|DOMComment|DOMText|DOMElement|DOMProcessingInstruction|null
     {
         $nextNode = self::getNextNode($node, true);
         $node->parentNode->removeChild($node);

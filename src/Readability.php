@@ -2065,7 +2065,7 @@ class Readability
      * Readability.js has a special filter to avoid cleaning the classes that the algorithm adds. We don't add classes
      * here so no need to filter those.
      **/
-    public function _cleanClasses(DOMDocument|DOMText|DOMNode|DOMElement $node): void
+    public function _cleanClasses(DOMDocument|DOMText|DOMNode|DOMElement|DOMProcessingInstruction $node): void
     {
         if ($node->hasAttribute('class')) {
             $node->removeAttribute('class');
