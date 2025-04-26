@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [v3.3.3](https://github.com/fivefilters/readability.php/releases/tag/v3.3.3)
+- Fix type error - extends type support to add DOMProcessingInstruction in more method signatures (reported by @reinierkors)
+
 ## [v3.3.2](https://github.com/fivefilters/readability.php/releases/tag/v3.3.2)
 - Fix type error - extends type support to include DOMCdataSection and DOMProcessingInstruction in various method signatures (reported by @mikiescolarmrf and @Grotax)
 
