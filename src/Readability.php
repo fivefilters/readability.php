@@ -2045,7 +2045,7 @@ class Readability
      * @param DOMNode the node to check.
      * @return boolean indicating whether this is a title-like header.
      */
-    private function headerDuplicatesTitle(DOMNode|DOMText|DOMElement|DOMProcessingInstruction $node): bool
+    private function headerDuplicatesTitle(DOMNode|DOMText|DOMElement|DOMProcessingInstruction|DOMCdataSection $node): bool
     {
         if ($node->nodeName !== 'h1' && $node->nodeName !== 'h2') {
             return false;
