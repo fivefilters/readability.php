@@ -60,6 +60,22 @@ $article->contentElement; // \Dom\Element – content as a DOM element
 echo $article;           // same as $article->content
 ```
 
+So for finer control over the output, wrap the properties in your own HTML:
+
+```php
+<h1><?= $article->title ?></h1>
+<h2>By <?= $article->byline ?></h2>
+<div class="content"><?= $article->content ?></div>
+```
+
+For post-processing, `contentElement` gives you the article as a DOM element — CSS selectors work natively:
+
+```php
+foreach ($article->contentElement->querySelectorAll('img[src]') as $img) {
+    $images[] = $img->getAttribute('src');
+}
+```
+
 If you already have a `\Dom\HTMLDocument` (for example because you want to pre-process it), use `parseDocument()` instead of `parse()`. Note that the document is modified in place while the article is extracted.
 
 There is also a port of Mozilla's `isProbablyReaderable`, a quick check for whether it's worth running the full parse:
@@ -106,34 +122,11 @@ Toggles for internal Readability flags carried over from earlier versions (alway
 - **weightClasses**: default `true`, weight classes during the rating phase.
 - **cleanConditionally**: default `true`, remove certain nodes after parsing to return a cleaner result.
 
-## Migrating from 3.x
+## Upgrading from 3.x
 
-The 4.0 API is new. The parse result is now a value object instead of getters on a stateful instance:
+The 4.0 API is new: the parse result is a readonly `Article` value object instead of getters on a stateful instance, `Configuration` uses named constructor arguments instead of setters, and a few 3.x-only features (image extraction, PSR-3 logging, the libxml workaround options) are gone.
 
-| 3.x | 4.0 |
-| --- | --- |
-| `$r->parse($html); $r->getContent();` | `$article = $r->parse($html); $article->content;` |
-| `parse()` returns bool | `parse()` returns `Article`, throws `ParseException` |
-| `->getTitle()` | `$article->title` |
-| `->getExcerpt()` | `$article->excerpt` |
-| `->getAuthor()` | `$article->byline` |
-| `->getSiteName()` | `$article->siteName` |
-| `->getDirection()` | `$article->dir` |
-| `->getDOMDocument()` | `$article->contentElement` (a `\Dom\Element`) |
-| `->getImage()`, `->getImages()` | removed (not part of Readability.js) |
-| — | new: `$article->textContent`, `->length`, `->lang`, `->publishedTime` |
-
-Configuration changes:
-
-- `maxTopCandidates` is now `nbTopCandidates` (matching Readability.js); `classesToPreserve`, `maxElemsToParse`, `allowedVideoRegex`, `linkDensityModifier` and `debug` are new.
-- Removed: `parser` (always the native Lexbor parser now), `substituteEntities`, `normalizeEntities`, `summonCthulhu` (all were libxml workarounds), `articleByline` (byline detection is always on, as in Readability.js).
-- PSR-3 logger support is replaced by the `debug` flag (messages go to `error_log()`), matching Readability.js's `debug` option.
-
-Behavior changes to be aware of:
-
-- The article HTML is now wrapped in `<div id="readability-page-1" class="page">…</div>`, exactly as Readability.js outputs.
-- Byline detection always runs and the byline is removed from the content (previously opt-in via `articleByline`).
-- Input strings are parsed with the encoding declared in the document (or detected); pass UTF-8 (or ensure a correct `meta charset`) for best results.
+**See [UPGRADE.md](UPGRADE.md)** for the full guide: before/after code, a mapping table for every 3.x method and option, replacement snippets for the removed features, and the behavior changes to be aware of.
 
 ## Limitations
 

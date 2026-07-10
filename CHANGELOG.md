@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ## [v4.0.0](https://github.com/fivefilters/readability.php/releases/tag/v4.0.0)
 
-Ground-up rewrite on PHP 8.4's native DOM API, at parity with Readability.js v0.6.0 (git master). See the README's "Migrating from 3.x" section for the full API changes.
+Ground-up rewrite on PHP 8.4's native DOM API, at parity with Readability.js v0.6.0 (git master). See [UPGRADE.md](UPGRADE.md) for the full 3.x → 4.0 migration guide.
 
 ### Changed
 - Requires PHP >= 8.4; parsing and serialization use `Dom\HTMLDocument` (the WHATWG-spec Lexbor parser bundled with PHP), replacing HTML5-PHP and the legacy libxml path
