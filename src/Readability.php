@@ -681,7 +681,7 @@ final class Readability
             $replacement->appendChild($node->firstChild);
         }
         $node->parentNode->replaceChild($replacement, $node);
-        if ($this->scores->contains($node)) {
+        if ($this->scores->offsetExists($node)) {
             $this->scores[$replacement] = $this->scores[$node];
         }
 
@@ -1108,7 +1108,7 @@ final class Readability
                         continue;
                     }
 
-                    if (!$this->scores->contains($ancestor)) {
+                    if (!$this->scores->offsetExists($ancestor)) {
                         $this->initializeNode($ancestor);
                         $candidates[] = $ancestor;
                     }
@@ -1201,7 +1201,7 @@ final class Readability
                         $parentOfTopCandidate = $parentOfTopCandidate->parentNode;
                     }
                 }
-                if (!$this->scores->contains($topCandidate)) {
+                if (!$this->scores->offsetExists($topCandidate)) {
                     $this->initializeNode($topCandidate);
                 }
 
@@ -1217,7 +1217,7 @@ final class Readability
                 // The scores shouldn't get too low.
                 $scoreThreshold = $lastScore / 3;
                 while ($parentOfTopCandidate instanceof \Dom\Element && $parentOfTopCandidate->tagName !== 'BODY') {
-                    if (!$this->scores->contains($parentOfTopCandidate)) {
+                    if (!$this->scores->offsetExists($parentOfTopCandidate)) {
                         $parentOfTopCandidate = $parentOfTopCandidate->parentNode;
                         continue;
                     }
@@ -1245,7 +1245,7 @@ final class Readability
                     $topCandidate = $parentOfTopCandidate;
                     $parentOfTopCandidate = $topCandidate->parentNode;
                 }
-                if (!$this->scores->contains($topCandidate)) {
+                if (!$this->scores->offsetExists($topCandidate)) {
                     $this->initializeNode($topCandidate);
                 }
             }
@@ -1266,7 +1266,7 @@ final class Readability
             foreach ($siblings as $sibling) {
                 $append = false;
 
-                $this->log('Looking at sibling node:', $sibling, $this->scores->contains($sibling) ? 'with score ' . $this->scores[$sibling] : '');
+                $this->log('Looking at sibling node:', $sibling, $this->scores->offsetExists($sibling) ? 'with score ' . $this->scores[$sibling] : '');
 
                 if ($sibling === $topCandidate) {
                     $append = true;
@@ -1278,7 +1278,7 @@ final class Readability
                         $contentBonus += $this->scores[$topCandidate] * 0.2;
                     }
 
-                    if ($this->scores->contains($sibling) && $this->scores[$sibling] + $contentBonus >= $siblingScoreThreshold) {
+                    if ($this->scores->offsetExists($sibling) && $this->scores[$sibling] + $contentBonus >= $siblingScoreThreshold) {
                         $append = true;
                     } elseif ($sibling->nodeName === 'P') {
                         $linkDensity = $this->getLinkDensity($sibling);
@@ -2113,7 +2113,7 @@ final class Readability
     /** The isDataTable check used by cleanConditionally (JS: t._readabilityDataTable). */
     private function isDataTable(\Dom\Element $table): bool
     {
-        return $this->dataTables->contains($table) && $this->dataTables[$table];
+        return $this->dataTables->offsetExists($table) && $this->dataTables[$table];
     }
 
     /**

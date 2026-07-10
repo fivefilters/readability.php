@@ -46,10 +46,10 @@ final class Readerable
         if ($brNodes->length) {
             $set = new \SplObjectStorage();
             foreach ($nodes as $node) {
-                $set->attach($node);
+                $set->offsetSet($node);
             }
             foreach ($brNodes as $node) {
-                $set->attach($node->parentNode);
+                $set->offsetSet($node->parentNode);
             }
             $nodes = iterator_to_array($set, false);
         }
