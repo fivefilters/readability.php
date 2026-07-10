@@ -141,7 +141,7 @@ Websites that load their content through JavaScript (lazy loading, AJAX) will no
 
 ## Dependencies
 
-- [League URI](https://uri.thephpleague.com/) for relative URL resolution.
+- [rowbot/url](https://github.com/TRowbotham/URL-Parser) for [WHATWG URL Standard](https://url.spec.whatwg.org/) relative URL resolution on PHP 8.4. On PHP 8.5+ the native [`Uri\WhatWg\Url`](https://www.php.net/manual/en/class.uri-whatwg-url.php) class is used automatically instead — the same URL parser Readability.js gets from the browser's `new URL()`.
 
 That's it — parsing and serialization use PHP's own DOM extension.
 

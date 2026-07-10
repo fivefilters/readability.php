@@ -30,7 +30,7 @@ The private methods in `src/Readability.php` mirror the prototype methods of Rea
 3. Copy any added/changed directories from Mozilla's `test/test-pages/` into `test/test-pages/` verbatim (drop each page's `expected-images.json`-era leftovers if any; sources, `expected.html` and `expected-metadata.json` are used as-is).
 4. Run `./vendor/bin/phpunit`, then the cross-check harness in `test/tools/` (bump the `@mozilla/readability` version in its `package.json`), and update `known-divergences.md`.
 
-Things that intentionally differ from the JS (don't "fix" these): scoring state lives in `SplObjectStorage` maps instead of node expandos; `getAllNodesWithTag` materializes querySelectorAll snapshots; `toAbsoluteURI` reproduces WHATWG URL parser behaviors on top of league/uri; JS `''`/`undefined` metadata maps to PHP `null`; `parse()` throws instead of returning null.
+Things that intentionally differ from the JS (don't "fix" these): scoring state lives in `SplObjectStorage` maps instead of node expandos; `getAllNodesWithTag` materializes querySelectorAll snapshots; URL resolution goes through `src/Url.php`, which wraps a real WHATWG URL parser (PHP 8.5's native `Uri\WhatWg\Url`, or rowbot/url on PHP 8.4) and returns `null` where JS `new URL()` throws; JS `''`/`undefined` metadata maps to PHP `null`; `parse()` throws instead of returning null.
 
 ## Running Tests
 

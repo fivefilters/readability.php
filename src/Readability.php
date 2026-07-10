@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace fivefilters\Readability;
 
-use League\Uri\BaseUri;
-use League\Uri\Uri;
-
 /**
  * A port of Mozilla's Readability.js, v0.6.0, on PHP's native DOM API
  * (\Dom\HTMLDocument, PHP >= 8.4).
@@ -215,15 +212,14 @@ final class Readability
         $this->baseURI = $this->documentURI;
 
         $baseHref = $this->doc->querySelector('base[href]')?->getAttribute('href');
-        if ($baseHref !== null && ($baseHref = trim($baseHref)) !== '') {
+        if ($baseHref !== null && trim($baseHref) !== '') {
             if ($this->documentURI !== null) {
-                try {
-                    $this->baseURI = (string) BaseUri::from($this->documentURI)->resolve($baseHref);
-                } catch (\Throwable) {
-                    // Keep documentURI as base.
-                }
-            } elseif ($this->isUrl($baseHref)) {
-                $this->baseURI = $baseHref;
+                // An unparseable base href leaves documentURI as the base,
+                // as in a browser.
+                $this->baseURI = Url::resolve($baseHref, $this->documentURI) ?? $this->documentURI;
+            } else {
+                // No document URL: an absolute base href can stand on its own.
+                $this->baseURI = Url::resolve($baseHref);
             }
         }
     }
@@ -331,11 +327,7 @@ final class Readability
      */
     private function isUrl(string $str): bool
     {
-        try {
-            return Uri::new($str)->getScheme() !== null;
-        } catch (\Throwable) {
-            return false;
-        }
+        return Url::isValid($str);
     }
 
     /**
@@ -396,59 +388,17 @@ final class Readability
         }
     }
 
-    /**
-     * The toAbsoluteURI closure inside _fixRelativeUris. JS relies on the
-     * WHATWG URL parser; the differences from league/uri's RFC 3986 resolver
-     * that show up on real pages are reproduced here.
-     */
+    /** The toAbsoluteURI closure inside _fixRelativeUris. */
     private function toAbsoluteURI(string $uri): string
     {
-        // The WHATWG parser strips leading/trailing C0 controls and spaces,
-        // and removes tabs and newlines anywhere in the input.
-        $uri = trim($uri, "\x00..\x20");
-        $uri = str_replace(["\t", "\n", "\r"], '', $uri);
-
         // Leave hash links alone if the base URI matches the document URI:
         if ($this->baseURI === $this->documentURI && str_starts_with($uri, '#')) {
             return $uri;
         }
 
-        if (preg_match('/^[a-zA-Z][a-zA-Z0-9+.\-]*:/', $uri)) {
-            // Already absolute (http:, data:, blob:, …): the WHATWG parser
-            // passes these through nearly unchanged, but never leaves an
-            // authority followed by an empty path — new URL("https://example.com").href
-            // is "https://example.com/".
-            try {
-                $result = Uri::new($uri);
-            } catch (\Throwable) {
-                // Opaque schemes league/uri won't parse (data: with spaces, blob:).
-                return $uri;
-            }
-            if ($result->getAuthority() !== null && $result->getPath() === '') {
-                $result = $result->withPath('/');
-            }
-            return (string) $result;
-        }
-
-        // The WHATWG parser percent-encodes spaces rather than rejecting them.
-        $uri = str_replace(' ', '%20', $uri);
-
-        // Otherwise, resolve against base URI:
-        try {
-            $resolved = BaseUri::from($this->baseURI)->resolve($uri);
-        } catch (\Throwable) {
-            // A reference whose first path segment contains a colon without a
-            // valid scheme (e.g. "\u{200B}https://…") is relative to the WHATWG
-            // parser but invalid to an RFC 3986 resolver; "./" disambiguates.
-            try {
-                $resolved = BaseUri::from($this->baseURI)->resolve('./' . $uri);
-            } catch (\Throwable) {
-                // Something went wrong, just return the original:
-                return $uri;
-            }
-        }
-
-        return (string) $resolved;
+        // Otherwise, resolve against base URI; if something went wrong,
+        // just return the original:
+        return Url::resolve($uri, $this->baseURI) ?? $uri;
     }
 
     /** Mirrors _simplifyNestedElements. */

@@ -11,6 +11,7 @@ Ground-up rewrite on PHP 8.4's native DOM API, at parity with Readability.js v0.
 - `Configuration` is a readonly object with named constructor arguments; `maxTopCandidates` renamed to `nbTopCandidates` (matching Readability.js)
 - Article output is wrapped in `<div id="readability-page-1" class="page">`, as in Readability.js
 - Byline detection always runs (previously opt-in via `articleByline`)
+- Relative URL resolution now uses a real WHATWG URL parser — PHP 8.5's native `Uri\WhatWg\Url` when available, [rowbot/url](https://github.com/TRowbotham/URL-Parser) on PHP 8.4 — matching the `new URL()` behavior Readability.js relies on; replaces league/uri
 - Test corpus replaced with Mozilla's 130 test pages verbatim; content comparison ports Mozilla's structural DOM comparison
 
 ### Added

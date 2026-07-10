@@ -93,6 +93,23 @@ class ReadabilityUnitTest extends TestCase
         ];
     }
 
+    #[DataProvider('isUrlProvider')]
+    public function testIsUrl(string $str, bool $expected): void
+    {
+        $this->assertSame($expected, self::invoke('isUrl', $str));
+    }
+
+    public static function isUrlProvider(): array
+    {
+        return [
+            'http' => ['http://example.com/author/jane', true],
+            'mailto' => ['mailto:jane@example.com', true],
+            'no scheme' => ['example.com/author/jane', false],
+            'relative path' => ['/author/jane', false],
+            'plain name' => ['Jane Doe', false],
+        ];
+    }
+
     #[DataProvider('isValidBylineProvider')]
     public function testIsValidByline(string $html, bool $expected): void
     {
