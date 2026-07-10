@@ -88,7 +88,8 @@ class ReadabilityTest extends TestCase
     public function testOversizedDocumentThrows(): void
     {
         $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('Aborting parsing document; 2 elements found');
+        // html, head, body, div — parsing produces a full document
+        $this->expectExceptionMessage('Aborting parsing document; 4 elements found');
         new Readability(new Configuration(maxElemsToParse: 1))->parse('<html><div>yo</div></html>');
     }
 
@@ -116,8 +117,10 @@ class ReadabilityTest extends TestCase
 
     private function parse(string $source): Article
     {
-        // Mirror Mozilla's jsdom test path: comments removed before parsing.
-        $document = \Dom\HTMLDocument::createFromString($source, LIBXML_NOERROR);
+        // Mirror Mozilla's jsdom test path: the source is UTF-8 text (jsdom
+        // receives a decoded string, so meta charsets in the fixtures must not
+        // trigger re-decoding), and comments are removed before parsing.
+        $document = \Dom\HTMLDocument::createFromString($source, LIBXML_NOERROR, 'UTF-8');
         $this->removeCommentNodesRecursively($document);
 
         $readability = new Readability(new Configuration(

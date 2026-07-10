@@ -40,7 +40,7 @@ foreach (scandir($root) as $dir) {
     $source = trim(file_get_contents("{$root}/{$dir}/source.html"));
 
     try {
-        $document = \Dom\HTMLDocument::createFromString($source, LIBXML_NOERROR);
+        $document = \Dom\HTMLDocument::createFromString($source, LIBXML_NOERROR, 'UTF-8');
         removeCommentNodesRecursively($document);
         $article = new Readability(new Configuration(
             classesToPreserve: ['caption'],
