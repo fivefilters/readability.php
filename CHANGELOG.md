@@ -1,6 +1,30 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [v4.0.0](https://github.com/fivefilters/readability.php/releases/tag/v4.0.0)
+
+Ground-up rewrite on PHP 8.4's native DOM API, at parity with Readability.js v0.6.0 (git master). See the README's "Migrating from 3.x" section for the full API changes.
+
+### Changed
+- Requires PHP >= 8.4; parsing and serialization use `Dom\HTMLDocument` (the WHATWG-spec Lexbor parser bundled with PHP), replacing HTML5-PHP and the legacy libxml path
+- `parse()` now returns a readonly `Article` value object (`title`, `content`, `textContent`, `length`, `excerpt`, `byline`, `siteName`, `dir`, `lang`, `publishedTime`, `contentElement`) and throws `ParseException` when no article is found
+- `Configuration` is a readonly object with named constructor arguments; `maxTopCandidates` renamed to `nbTopCandidates` (matching Readability.js)
+- Article output is wrapped in `<div id="readability-page-1" class="page">`, as in Readability.js
+- Byline detection always runs (previously opt-in via `articleByline`)
+- Test corpus replaced with Mozilla's 130 test pages verbatim; content comparison ports Mozilla's structural DOM comparison
+
+### Added
+- Parity with Readability.js 0.6.0: `lang` and `publishedTime` output; `maxElemsToParse`, `classesToPreserve`, `allowedVideoRegex`, `linkDensityModifier` and `debug` options; aria-modal dialog removal; ad/loading-indicator stripping; parsely/`article:author`/`itemprop` metadata sources; JSON-LD `@graph`, `@context`-object and array handling; Unicode comma scoring; updated regexes (mathjax, bilibili, en/em-dash title separators)
+- `Readerable::isProbablyReaderable()`, a port of Readability-readerable.js
+- `parseDocument()` for callers who already hold a `Dom\HTMLDocument`
+- Cross-check harness (`test/tools/`) that diffs this port's output against Readability.js over the whole corpus
+
+### Removed
+- HTML5-PHP and PSR-3 dependencies; `ext-xml` requirement
+- Options that existed as libxml workarounds: `parser`, `substituteEntities`, `normalizeEntities`, `summonCthulhu`
+- Image extraction (`getImage()`/`getImages()`) — not part of Readability.js
+- The custom DOM subclass layer (`src/Nodes/`) and its workarounds (attribute-based state, shifting-aware iteration)
+
 ## [v3.3.3](https://github.com/fivefilters/readability.php/releases/tag/v3.3.3)
 - Fix type error - extends type support to add DOMProcessingInstruction in more method signatures (reported by @reinierkors)
 

@@ -21,10 +21,22 @@ For anything else, we accept contributions via Pull Requests on [Github](https:/
 - **Don't forget to add yourself to AUTHORS.md** - If you want to be credited, make sure you add your information (whatever you want to include) in `AUTHORS.md`.
 
 
+## Syncing with a new Readability.js release
+
+The private methods in `src/Readability.php` mirror the prototype methods of Readability.js in name (minus the underscore prefix) and order, so syncing is a mechanical diff exercise:
+
+1. Diff the new `Readability.js` against the previous synced version (git master at the time of the last sync — see `test/tools/known-divergences.md`).
+2. For each changed `_method`, apply the same change to the matching method in `src/Readability.php`. Regex changes go to `src/RegExps.php` (constants are the UPPER_SNAKE forms of the JS `REGEXPS` keys). `Readability-readerable.js` changes go to `src/Readerable.php`.
+3. Copy any added/changed directories from Mozilla's `test/test-pages/` into `test/test-pages/` verbatim (drop each page's `expected-images.json`-era leftovers if any; sources, `expected.html` and `expected-metadata.json` are used as-is).
+4. Run `./vendor/bin/phpunit`, then the cross-check harness in `test/tools/` (bump the `@mozilla/readability` version in its `package.json`), and update `known-divergences.md`.
+
+Things that intentionally differ from the JS (don't "fix" these): scoring state lives in `SplObjectStorage` maps instead of node expandos; `getAllNodesWithTag` materializes querySelectorAll snapshots; `toAbsoluteURI` reproduces WHATWG URL parser behaviors on top of league/uri; JS `''`/`undefined` metadata maps to PHP `null`; `parse()` throws instead of returning null.
+
 ## Running Tests
 
 ``` bash
-$ make test-all #requires docker and docker-compose
+$ ./vendor/bin/phpunit      # requires PHP 8.4+
+$ make test-all             # multiple PHP versions; requires docker and docker-compose
 ```
 
 
