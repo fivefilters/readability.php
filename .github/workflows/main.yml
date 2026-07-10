@@ -1,46 +1,32 @@
-# This is a basic workflow to help you get started with Actions
-
 name: CI
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: [master]
   pull_request:
     branches: [master]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  test:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        php: ['8.1', '8.2', '8.3', '8.4']
-        libxml: ['2.9.14']
+        php: ['8.4', '8.5']
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{matrix.php}}
+          extensions: dom, mbstring
           tools: composer:v2
 
       - name: Install dependencies
         run: composer install
 
-      # Runs a set of commands using the runners shell
       - name: Run tests
-        run: |
-          docker build --build-arg PHP_VERSION=${{matrix.php}} --build-arg LIBXML_VERSION=${{matrix.libxml}} -t gh-action - < ./docker/php/Dockerfile
-          docker run --volume $PWD:/app --workdir="/app" --env XDEBUG_MODE=coverage gh-action php ./vendor/bin/phpunit --coverage-clover /app/test/clover.xml
+        run: ./vendor/bin/phpunit

@@ -1,8 +1,9 @@
 {
-    "Author": "Creator Name",
-    "Direction": null,
-    "Excerpt": "Preferred description",
-    "Image": null,
-    "Title": "My title",
-    "SiteName": null
+  "title": "My title",
+  "byline": "Creator Name",
+  "dir": null,
+  "excerpt": "Preferred description",
+  "siteName": null,
+  "publishedTime": null,
+  "readerable": true
 }

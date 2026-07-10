@@ -3,3 +3,6 @@ vendor
 composer.lock
 /test.*
 /test/changed/
+/test/tools/node_modules/
+/test/tools/js-output/
+/test/tools/package-lock.json

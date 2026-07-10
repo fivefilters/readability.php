@@ -1,191 +1,173 @@
 <?php
 
+declare(strict_types=1);
+
 namespace fivefilters\Readability\Test;
 
-use PHPUnit\Framework\Attributes\DataProvider;
+use fivefilters\Readability\Article;
 use fivefilters\Readability\Configuration;
 use fivefilters\Readability\ParseException;
 use fivefilters\Readability\Readability;
+use fivefilters\Readability\Readerable;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 
-ini_set('memory_limit','1024M');
-
-/**
- * Class ReadabilityTest.
- */
-class ReadabilityTest extends \PHPUnit\Framework\TestCase
+class ReadabilityTest extends TestCase
 {
     /**
-     * Test that Readability parses the HTML correctly and matches the expected result.
-     * @throws ParseException
+     * The same URL Mozilla's test harness supplies to jsdom; the expected
+     * files have relative URLs resolved against it.
      */
-    #[DataProvider('getSamplePages')]
-    public function testReadabilityParsesHTML(TestPage $testPage): void
-    {
-        $options = ['OriginalURL' => 'http://fakehost/test/test.html',
-            'FixRelativeURLs' => true,
-            'SubstituteEntities' => true,
-            'ArticleByline' => true
-        ];
+    private const string TEST_URL = 'http://fakehost/test/page.html';
 
-        $configuration = new Configuration(array_merge($testPage->getConfiguration(), $options));
-
-        $readability = new Readability($configuration);
-        $readability->parse($testPage->getSourceHTML());
-
-        // Let's (crudely) remove whitespace between tags here to simplify comparison.
-        // This isn't used for output.
-        $from = ['/\>[^\S ]+/s', '/[^\S ]+\</s', '/(\s)+/s', '/> </s'];
-        $to   = ['>',            '<',            '\\1',      '><'];
-        $expected_no_whitespace = preg_replace($from, $to, $testPage->getExpectedHTML());
-        $readability_no_whitespace = preg_replace($from, $to, $readability->getContent());
-
-        if (getenv('output-changes') && $expected_no_whitespace !== $readability_no_whitespace) {
-            @mkdir(__DIR__.'/changed/'.$testPage->getSlug(), 0777, true);
-            $new_expected = __DIR__.'/changed/'.$testPage->getSlug().'/expected.html';
-            $old_expected = __DIR__.'/test-pages/'.$testPage->getSlug().'/expected.html';
-            //file_put_contents(__DIR__.'/changed/'.$testPage->getSlug().'/readability.html', $readability_no_whitespace);
-            //file_put_contents(__DIR__.'/changed/'.$testPage->getSlug().'/expected-current.html', $expected_no_whitespace);
-            file_put_contents($new_expected, $readability->getContent());
-            if (getenv('output-diff')) {
-                file_put_contents(__DIR__.'/changed/'.$testPage->getSlug().'/diff-expected.txt', shell_exec(sprintf('diff -u -d %s %s', $old_expected, $new_expected)));
-            }
-
-        }
-
-        $this->assertSame($expected_no_whitespace, $readability_no_whitespace, 'Parsed text does not match the expected one.');
-
-        //$this->assertSame($testPage->getExpectedHTML(), $readability->getContent(), 'Parsed text does not match the expected one.');
-        //$this->assertXmlStringEqualsXmlString($testPage->getExpectedHTML(), $readability->getContent(), 'Parsed text does not match the expected one.');
-    }
-
-    /**
-     * Test that Readability parses the HTML correctly and matches the expected result.
-     * @throws ParseException
-     */
-    #[DataProvider('getSamplePages')]
-    public function testReadabilityParsesMetadata(TestPage $testPage): void
-    {
-        $options = ['OriginalURL' => 'http://fakehost/test/test.html',
-            'FixRelativeURLs' => true,
-            'SubstituteEntities' => true,
-            'ArticleByline' => true
-        ];
-
-        $configuration = new Configuration(array_merge($testPage->getConfiguration(), $options));
-
-        $readability = new Readability($configuration);
-        $readability->parse($testPage->getSourceHTML());
-
-        $metadata = [
-            'Author' => $readability->getAuthor(),
-            'Direction' => $readability->getDirection(),
-            'Excerpt' => $readability->getExcerpt(),
-            'Image' => $readability->getImage(),
-            'Title' => $readability->getTitle(),
-            'SiteName' => $readability->getSiteName()
-        ];
-
-        if (getenv('output-changes') && (array)$testPage->getExpectedMetadata() !== $metadata) {
-            @mkdir(__DIR__.'/changed/'.$testPage->getSlug(), 0777, true);
-            $new_expected = __DIR__.'/changed/'.$testPage->getSlug().'/expected-metadata.json';
-            $old_expected = __DIR__.'/test-pages/'.$testPage->getSlug().'/expected-metadata.json';
-            //file_put_contents(__DIR__.'/changed/'.$testPage->getSlug().'/expected-metadata-current.json', json_encode($testPage->getExpectedMetadata(), JSON_PRETTY_PRINT));
-            file_put_contents($new_expected, json_encode((object)$metadata, JSON_PRETTY_PRINT));
-            if (getenv('output-diff')) {
-                file_put_contents(__DIR__.'/changed/'.$testPage->getSlug().'/diff-expected-metadata.txt', shell_exec(sprintf('diff -u -d %s %s', $old_expected, $new_expected)));
-            }
-        }
-
-        $this->assertSame($testPage->getExpectedMetadata()->Author, $readability->getAuthor(), 'Parsed Author does not match expected value.');
-        $this->assertSame($testPage->getExpectedMetadata()->Direction, $readability->getDirection(), 'Parsed Direction does not match expected value.');
-        $this->assertSame($testPage->getExpectedMetadata()->Excerpt, $readability->getExcerpt(), 'Parsed Excerpt does not match expected value.');
-        $this->assertSame($testPage->getExpectedMetadata()->Image, $readability->getImage(), 'Parsed Image does not match expected value.');
-        $this->assertSame($testPage->getExpectedMetadata()->Title, $readability->getTitle(), 'Parsed Title does not match expected value.');
-    }
-
-    /**
-     * Test that Readability returns all the expected images from the test page.
-     * @throws ParseException
-     */
-    #[DataProvider('getSamplePages')]
-    public function testHTMLParserParsesImages(TestPage $testPage): void
-    {
-        $options = ['OriginalURL' => 'http://fakehost/test/test.html',
-            'FixRelativeURLs' => true,
-            'SubstituteEntities' => true,
-        ];
-
-        $configuration = new Configuration(array_merge($testPage->getConfiguration(), $options));
-
-        $readability = new Readability($configuration);
-        $readability->parse($testPage->getSourceHTML());
-
-        if (getenv('output-changes') && $testPage->getExpectedImages() !== array_values($readability->getImages())) {
-            @mkdir(__DIR__.'/changed/'.$testPage->getSlug(), 0777, true);
-            $new_expected = __DIR__.'/changed/'.$testPage->getSlug().'/expected-images.json';
-            $old_expected = __DIR__.'/test-pages/'.$testPage->getSlug().'/expected-images.json';
-            //file_put_contents(__DIR__.'/changed/'.$testPage->getSlug().'/expected-images-current.json', json_encode($testPage->getExpectedImages(), JSON_PRETTY_PRINT));
-            file_put_contents($new_expected, json_encode(array_values($readability->getImages()), JSON_PRETTY_PRINT));
-            if (getenv('output-diff')) {
-                file_put_contents(__DIR__.'/changed/'.$testPage->getSlug().'/diff-expected-images.txt', shell_exec(sprintf('diff -u -d %s %s', $old_expected, $new_expected)));
-            }
-        }
-
-        $this->assertSame($testPage->getExpectedImages(), array_values($readability->getImages()));
-    }
-
-    /**
-     * Main data provider.
-     */
     public static function getSamplePages(): \Generator
     {
-        $path = pathinfo(__FILE__, PATHINFO_DIRNAME) . DIRECTORY_SEPARATOR . 'test-pages';
-        $testPages = scandir($path);
+        $root = __DIR__ . '/test-pages';
+        foreach (scandir($root) as $dir) {
+            if ($dir[0] === '.') {
+                continue;
+            }
+            yield $dir => [new TestPage(
+                $dir,
+                trim(file_get_contents("{$root}/{$dir}/source.html")),
+                trim(file_get_contents("{$root}/{$dir}/expected.html")),
+                json_decode(file_get_contents("{$root}/{$dir}/expected-metadata.json"), true),
+            )];
+        }
+    }
 
-        foreach (array_slice($testPages, 2) as $testPage) {
-            $testCasePath = $path . DIRECTORY_SEPARATOR . $testPage . DIRECTORY_SEPARATOR;
+    #[DataProvider('getSamplePages')]
+    public function testContent(TestPage $testPage): void
+    {
+        $article = $this->parse($testPage->source);
+        $difference = DomCompare::compare($testPage->expectedContent, $article->content);
+        if ($difference !== null) {
+            $this->outputChanges($testPage->slug, $article);
+        }
+        $this->assertNull($difference, "Content mismatch: {$difference}");
+    }
 
-            $slug = $testPage;
-            $source = file_get_contents($testCasePath . 'source.html');
-            $expectedHTML = file_exists($testCasePath . 'expected.html') ? file_get_contents($testCasePath . 'expected.html') : '';
-            $expectedImages = file_exists($testCasePath . 'expected-images.json') ? json_decode(file_get_contents($testCasePath . 'expected-images.json'), true) : [];
-            $expectedMetadata = file_exists($testCasePath . 'expected-metadata.json') ? json_decode(file_get_contents($testCasePath . 'expected-metadata.json')) : (object)[];
-            $configuration = file_exists($testCasePath . 'config.json') ? json_decode(file_get_contents($testCasePath . 'config.json'), true) : [];
+    #[DataProvider('getSamplePages')]
+    public function testMetadata(TestPage $testPage): void
+    {
+        $article = $this->parse($testPage->source);
+        $expected = $testPage->expectedMetadata;
 
-            yield $testPage => [new TestPage($slug, $configuration, $source, $expectedHTML, $expectedImages, $expectedMetadata)];
+        $this->assertSame($expected['title'], $article->title, 'title');
+        $this->assertSame($expected['byline'], $article->byline, 'byline');
+        $this->assertSame($expected['excerpt'], $article->excerpt, 'excerpt');
+        $this->assertSame($expected['siteName'], $article->siteName, 'siteName');
+        if (!empty($expected['dir'])) {
+            $this->assertSame($expected['dir'], $article->dir, 'dir');
+        }
+        if (!empty($expected['lang'])) {
+            $this->assertSame($expected['lang'], $article->lang, 'lang');
+        }
+        if (!empty($expected['publishedTime'])) {
+            $this->assertSame($expected['publishedTime'], $article->publishedTime, 'publishedTime');
+        }
+    }
+
+    #[DataProvider('getSamplePages')]
+    public function testReaderable(TestPage $testPage): void
+    {
+        if (!array_key_exists('readerable', $testPage->expectedMetadata)) {
+            $this->markTestSkipped('No readerable key for this page.');
+        }
+        $document = \Dom\HTMLDocument::createFromString($testPage->source, LIBXML_NOERROR);
+        $this->assertSame($testPage->expectedMetadata['readerable'], Readerable::isProbablyReaderable($document));
+    }
+
+    public function testEmptyInputThrows(): void
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('No HTML content provided.');
+        new Readability()->parse('');
+    }
+
+    public function testOversizedDocumentThrows(): void
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Aborting parsing document; 2 elements found');
+        new Readability(new Configuration(maxElemsToParse: 1))->parse('<html><div>yo</div></html>');
+    }
+
+    public function testCustomAllowedVideoRegex(): void
+    {
+        $source = '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc mollis leo lacus, vitae semper nisl ullamcorper ut.</p>'
+            . '<iframe src="https://mycustomdomain.com/some-embeds"></iframe>';
+        $article = new Readability(new Configuration(
+            charThreshold: 20,
+            allowedVideoRegex: '/.*mycustomdomain.com.*/',
+        ))->parse($source);
+        $this->assertStringContainsString('<iframe src="https://mycustomdomain.com/some-embeds">', $article->content);
+    }
+
+    public function testKeepClasses(): void
+    {
+        $source = '<div class="wrapper"><p class="lead">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc mollis leo lacus, vitae semper nisl ullamcorper ut.</p></div>';
+        $kept = new Readability(new Configuration(charThreshold: 20, keepClasses: true))->parse($source);
+        $this->assertStringContainsString('class="lead"', $kept->content);
+        $stripped = new Readability(new Configuration(charThreshold: 20))->parse($source);
+        $this->assertStringNotContainsString('class="lead"', $stripped->content);
+        $preserved = new Readability(new Configuration(charThreshold: 20, classesToPreserve: ['lead']))->parse($source);
+        $this->assertStringContainsString('class="lead"', $preserved->content);
+    }
+
+    private function parse(string $source): Article
+    {
+        // Mirror Mozilla's jsdom test path: comments removed before parsing.
+        $document = \Dom\HTMLDocument::createFromString($source, LIBXML_NOERROR);
+        $this->removeCommentNodesRecursively($document);
+
+        $readability = new Readability(new Configuration(
+            classesToPreserve: ['caption'],
+            fixRelativeURLs: true,
+            originalURL: self::TEST_URL,
+        ));
+
+        return $readability->parseDocument($document);
+    }
+
+    private function removeCommentNodesRecursively(\Dom\Node $node): void
+    {
+        for ($i = $node->childNodes->length - 1; $i >= 0; $i--) {
+            $child = $node->childNodes->item($i);
+            if ($child->nodeType === XML_COMMENT_NODE) {
+                $node->removeChild($child);
+            } elseif ($child->nodeType === XML_ELEMENT_NODE) {
+                $this->removeCommentNodesRecursively($child);
+            }
         }
     }
 
     /**
-     * Test that Readability throws an exception with malformed HTML.
-     * @throws ParseException
+     * Write actual output for a failing page to test/changed/<slug>/ when the
+     * output-changes env var is set, for review or golden-file regeneration.
      */
-    public function testReadabilityThrowsExceptionWithMalformedHTML(): void
+    private function outputChanges(string $slug, Article $article): void
     {
-        $parser = new Readability(new Configuration());
-        $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('Invalid or incomplete HTML.');
-        $parser->parse('<html>');
-    }
-
-    /**
-     * Test that Readability throws an exception with incomplete or short HTML.
-     * @throws ParseException
-     */
-    public function testReadabilityThrowsExceptionWithUnparseableHTML(): void
-    {
-        $parser = new Readability(new Configuration());
-        $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('Could not parse text.');
-        $parser->parse('<html><body><p></p></body></html>');
-    }
-
-    /**
-     * Test that the Readability object has no content as soon as it is instantiated.
-     */
-    public function testReadabilityCallGetContentWithNoContent(): void
-    {
-        $parser = new Readability(new Configuration());
-        $this->assertNull($parser->getContent());
+        if (!getenv('output-changes')) {
+            return;
+        }
+        $dir = __DIR__ . '/changed/' . $slug;
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+        }
+        file_put_contents("{$dir}/expected.html", $article->content . "\n");
+        file_put_contents("{$dir}/expected-metadata.json", json_encode([
+            'title' => $article->title,
+            'byline' => $article->byline,
+            'dir' => $article->dir,
+            'lang' => $article->lang,
+            'excerpt' => $article->excerpt,
+            'siteName' => $article->siteName,
+            'publishedTime' => $article->publishedTime,
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n");
+        if (getenv('output-diff')) {
+            $expectedFile = __DIR__ . "/test-pages/{$slug}/expected.html";
+            $diff = shell_exec('diff -u ' . escapeshellarg($expectedFile) . ' ' . escapeshellarg("{$dir}/expected.html"));
+            file_put_contents("{$dir}/diff.txt", (string) $diff);
+        }
     }
 }

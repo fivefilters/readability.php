@@ -1,0 +1,10 @@
+{
+    "name": "readability-php-cross-check",
+    "private": true,
+    "type": "module",
+    "description": "Dev tool: run Mozilla Readability.js over the test corpus to compare against the PHP port's output.",
+    "dependencies": {
+        "@mozilla/readability": "^0.6.0",
+        "jsdom": "^24.0.0"
+    }
+}

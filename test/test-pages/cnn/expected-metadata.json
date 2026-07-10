@@ -1,8 +1,9 @@
 {
-    "Author": "Ahiza Garcia",
-    "Direction": null,
-    "Excerpt": "A recently-released report on poverty and inequality found that the U.S. ranks the lowest among countries with welfare states.",
-    "Image": "http:\/\/i2.cdn.turner.com\/money\/dam\/assets\/141103182938-income-inequality-780x439.png",
-    "Title": "The 'birth lottery' and economic mobility",
-    "SiteName": "CNNMoney"
+  "title": "The 'birth lottery' and economic mobility",
+  "byline": "Ahiza Garcia",
+  "dir": null,
+  "excerpt": "A recently-released report on poverty and inequality found that the U.S. ranks the lowest among countries with welfare states.",
+  "siteName": "CNNMoney",
+  "publishedTime": null,
+  "readerable": true
 }

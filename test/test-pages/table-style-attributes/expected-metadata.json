@@ -1,8 +1,9 @@
 {
-    "Author": null,
-    "Direction": null,
-    "Excerpt": "linux usability\n    ...or, why do I bother. © 2002, 2003\n        Jamie Zawinski",
-    "Image": null,
-    "Title": "linux video",
-    "SiteName": null
+  "title": "linux video",
+  "byline": null,
+  "dir": null,
+  "excerpt": "linux usability\n    ...or, why do I bother. © 2002, 2003\n        Jamie Zawinski",
+  "siteName": null,
+  "publishedTime": null,
+  "readerable": true
 }

@@ -1,8 +1,10 @@
 {
-    "Author": "Alexandre Hervaud, J\u00e9r\u00e9my Piette",
-    "Direction": null,
-    "Excerpt": "S\u00e9ries, documentaires, programmes jeunesse\u2026 Retrouvez les recommandations de\u00a0Lib\u00e9ration\u00a0pour savoir quoi regarder sur vos \u00e9crans cette semaine.\nPour d\u00e9passer...",
-    "Image": "https:\/\/medias.liberation.fr\/photo\/1075029-screenshot-alphonse-vape-wave-6-days.jpg?modified_at=1511536242&amp;picto=fb&amp;ratio_x=191&amp;ratio_y=100&amp;width=600",
-    "Title": "Screenshot\u00a0: \u00abVape Wave\u00bb, \u00ab6\u00a0Days\u00bb, \u00abAlphonse Pr\u00e9sident\u00bb\u2026",
-    "SiteName": "Lib\u00e9ration"
+  "title": "Screenshot : «Vape Wave», «6 Days», «Alphonse Président»…",
+  "byline": "Alexandre Hervaud, Jérémy Piette",
+  "dir": null,
+  "lang": "fr",
+  "excerpt": "Séries, documentaires, programmes jeunesse… Retrouvez les recommandations de Libération pour savoir quoi regarder sur vos écrans cette semaine.\nPour dépasser...",
+  "siteName": "Libération",
+  "publishedTime": "2017-11-24T18:42:20.314667",
+  "readerable": true
 }
