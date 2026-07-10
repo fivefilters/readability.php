@@ -1,0 +1,40 @@
+<?php
+
+/**
+ * Minimal stub of PHP 8.5's native URI extension — only the surface this
+ * library touches (src/Url.php) — for static analysis running on PHP 8.4.
+ */
+
+namespace Uri
+{
+    interface UriException extends \Throwable
+    {
+    }
+
+    class InvalidUriException extends \Exception implements UriException
+    {
+    }
+}
+
+namespace Uri\WhatWg
+{
+    final class InvalidUrlException extends \Uri\InvalidUriException
+    {
+    }
+
+    final readonly class Url
+    {
+        /** @param list<UrlValidationError> $softErrors */
+        public function __construct(string $uri, ?Url $baseUrl = null, &$softErrors = null)
+        {
+        }
+
+        public function toAsciiString(): string
+        {
+        }
+    }
+
+    final readonly class UrlValidationError
+    {
+    }
+}

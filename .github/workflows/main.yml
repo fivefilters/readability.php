@@ -30,3 +30,6 @@ jobs:
 
       - name: Run tests
         run: ./vendor/bin/phpunit
+
+      - name: Static analysis
+        run: ./vendor/bin/psalm --output-format=github --no-progress

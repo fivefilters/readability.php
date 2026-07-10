@@ -60,15 +60,18 @@ final class Readability
     private const string PROPERTY_PATTERN = '/\s*(article|dc|dcterm|og|twitter)\s*:\s*(author|creator|description|published_time|title|site_name)\s*/i';
     private const string NAME_PATTERN = '/^\s*(?:(dc|dcterm|og|twitter|parsely|weibo:(article|webpage))\s*[-\.:]\s*)?(author|creator|pub-date|description|title|site_name)\s*$/i';
 
-    private ?\Dom\HTMLDocument $doc = null;
+    private \Dom\HTMLDocument $doc;
     private int $flags = 0;
     private ?string $articleTitle = null;
     private ?string $articleByline = null;
     private ?string $articleDir = null;
     private ?string $articleLang = null;
     private ?string $articleSiteName = null;
+    /** @var list<array{articleContent: \Dom\Element, textLength: int}> */
     private array $attempts = [];
+    /** @var array<string, ?string> */
     private array $metadata = [];
+    /** @var non-empty-string */
     private string $allowedVideoRegex = RegExps::VIDEOS;
 
     /**
@@ -78,11 +81,11 @@ final class Readability
      * SplObjectStorage (not WeakMap) because the strong references keep the
      * PHP node wrappers alive, which is what makes node identity stable.
      *
-     * @var \SplObjectStorage<\Dom\Element, float>|null
+     * @var \SplObjectStorage<\Dom\Element, float>
      */
-    private ?\SplObjectStorage $scores = null;
-    /** @var \SplObjectStorage<\Dom\Element, bool>|null */
-    private ?\SplObjectStorage $dataTables = null;
+    private \SplObjectStorage $scores;
+    /** @var \SplObjectStorage<\Dom\Element, bool> */
+    private \SplObjectStorage $dataTables;
 
     /** Base URL handling: JS reads these from the live document. */
     private ?string $baseURI = null;
@@ -90,6 +93,9 @@ final class Readability
 
     public function __construct(private readonly Configuration $configuration = new Configuration())
     {
+        $this->doc = \Dom\HTMLDocument::createEmpty();
+        $this->scores = new \SplObjectStorage();
+        $this->dataTables = new \SplObjectStorage();
     }
 
     /**
@@ -128,7 +134,9 @@ final class Readability
         $this->articleDir = null;
         $this->articleLang = null;
         $this->articleSiteName = null;
-        $this->allowedVideoRegex = $this->configuration->allowedVideoRegex ?? RegExps::VIDEOS;
+        $this->allowedVideoRegex = ($this->configuration->allowedVideoRegex === null || $this->configuration->allowedVideoRegex === '')
+            ? RegExps::VIDEOS
+            : $this->configuration->allowedVideoRegex;
         $this->flags = ($this->configuration->stripUnlikelyCandidates ? self::FLAG_STRIP_UNLIKELYS : 0)
             | ($this->configuration->weightClasses ? self::FLAG_WEIGHT_CLASSES : 0)
             | ($this->configuration->cleanConditionally ? self::FLAG_CLEAN_CONDITIONALLY : 0);
@@ -194,9 +202,9 @@ final class Readability
             );
         } finally {
             // Release the per-parse node maps (and the nodes they keep alive).
-            $this->scores = null;
-            $this->dataTables = null;
-            $this->doc = null;
+            $this->scores = new \SplObjectStorage();
+            $this->dataTables = new \SplObjectStorage();
+            $this->doc = \Dom\HTMLDocument::createEmpty();
         }
     }
 
@@ -305,7 +313,7 @@ final class Readability
     {
         $classesToPreserve = [...self::CLASSES_TO_PRESERVE, ...$this->configuration->classesToPreserve];
         $className = implode(' ', array_filter(
-            preg_split('/\s+/', $node->getAttribute('class') ?? ''),
+            preg_split('/\s+/', $node->getAttribute('class') ?? '') ?: [],
             fn (string $class): bool => in_array($class, $classesToPreserve, true)
         ));
 
@@ -383,7 +391,7 @@ final class Readability
                     fn (array $m): string => $this->toAbsoluteURI($m[1]) . ($m[2] ?? '') . $m[3],
                     $srcset
                 );
-                $media->setAttribute('srcset', $newSrcset);
+                $media->setAttribute('srcset', $newSrcset ?? $srcset);
             }
         }
     }
@@ -448,18 +456,20 @@ final class Readability
         $curTitle = $origTitle = self::jsTrim($doc->title);
 
         $titleHadHierarchicalSeparators = false;
-        $wordCount = fn (string $str): int => count(preg_split('/\s+/u', $str));
+        $wordCount = fn (string $str): int => count(preg_split('/\s+/u', $str) ?: []);
 
         // If there's a separator in the title, first remove the final part
         if (preg_match('/\s' . self::TITLE_SEPARATORS . '\s/u', $curTitle)) {
             $titleHadHierarchicalSeparators = (bool) preg_match('/\s[\\\\\/>»]\s/u', $curTitle);
             preg_match_all('/\s' . self::TITLE_SEPARATORS . '\s/ui', $origTitle, $allSeparators, PREG_OFFSET_CAPTURE);
             $lastSeparator = end($allSeparators[0]);
-            $curTitle = substr($origTitle, 0, $lastSeparator[1]);
+            if ($lastSeparator !== false) {
+                $curTitle = substr($origTitle, 0, $lastSeparator[1]);
+            }
 
             // If the resulting title is too short, remove the first part instead:
             if ($wordCount($curTitle) < 3) {
-                $curTitle = preg_replace('/^[^\\\\\/|\-–—>»]*' . self::TITLE_SEPARATORS . '/ui', '', $origTitle);
+                $curTitle = preg_replace('/^[^\\\\\/|\-–—>»]*' . self::TITLE_SEPARATORS . '/ui', '', $origTitle) ?? '';
             }
         } elseif (str_contains($curTitle, ': ')) {
             // Check if we have an heading containing this exact string, so we
@@ -476,14 +486,15 @@ final class Readability
 
             // If we don't, let's extract the title out of the original title string.
             if (!$match) {
-                $curTitle = substr($origTitle, strrpos($origTitle, ':') + 1);
+                // (int) casts: the str_contains above guarantees a colon exists.
+                $curTitle = substr($origTitle, (int) strrpos($origTitle, ':') + 1);
 
                 // If the title is now too short, try the first colon instead:
                 if ($wordCount($curTitle) < 3) {
-                    $curTitle = substr($origTitle, strpos($origTitle, ':') + 1);
+                    $curTitle = substr($origTitle, (int) strpos($origTitle, ':') + 1);
                     // But if we have too many words before the colon there's something weird
                     // with the titles and the H tags so let's just use the original title instead
-                } elseif ($wordCount(substr($origTitle, 0, strpos($origTitle, ':'))) > 5) {
+                } elseif ($wordCount(substr($origTitle, 0, (int) strpos($origTitle, ':'))) > 5) {
                     $curTitle = $origTitle;
                 }
             }
@@ -495,7 +506,7 @@ final class Readability
             }
         }
 
-        $curTitle = preg_replace(RegExps::NORMALIZE, ' ', self::jsTrim($curTitle));
+        $curTitle = preg_replace(RegExps::NORMALIZE, ' ', self::jsTrim($curTitle)) ?? '';
         // If we now have 4 words or fewer as our title, and either no
         // 'hierarchical' separators (\, /, > or ») were found in the original
         // title or we decreased the number of words by more than 1 word, use
@@ -504,7 +515,7 @@ final class Readability
         if (
             $curTitleWordCount <= 4
             && (!$titleHadHierarchicalSeparators
-                || $curTitleWordCount != $wordCount(preg_replace('/\s' . self::TITLE_SEPARATORS . '\s/u', '', $origTitle)) - 1)
+                || $curTitleWordCount != $wordCount(preg_replace('/\s' . self::TITLE_SEPARATORS . '\s/u', '', $origTitle) ?? '') - 1)
         ) {
             $curTitle = $origTitle;
         }
@@ -611,7 +622,7 @@ final class Readability
                 }
 
                 while ($p->lastChild && $this->isWhitespace($p->lastChild)) {
-                    $p->lastChild->remove();
+                    $p->removeChild($p->lastChild);
                 }
 
                 if ($p->parentNode instanceof \Dom\Element && $p->parentNode->tagName === 'P') {
@@ -799,8 +810,8 @@ final class Readability
      */
     private function textSimilarity(string $textA, string $textB): float
     {
-        $tokensA = array_values(array_filter(preg_split(RegExps::TOKENIZE, mb_strtolower($textA)), fn (string $t): bool => $t !== ''));
-        $tokensB = array_values(array_filter(preg_split(RegExps::TOKENIZE, mb_strtolower($textB)), fn (string $t): bool => $t !== ''));
+        $tokensA = array_values(array_filter(preg_split(RegExps::TOKENIZE, mb_strtolower($textA)) ?: [], fn (string $t): bool => $t !== ''));
+        $tokensB = array_values(array_filter(preg_split(RegExps::TOKENIZE, mb_strtolower($textB)) ?: [], fn (string $t): bool => $t !== ''));
         if (!$tokensA || !$tokensB) {
             return 0;
         }
@@ -983,10 +994,10 @@ final class Readability
 
                             // Trim leading and trailing whitespace from the fragment.
                             while ($fragment->firstChild && $this->isWhitespace($fragment->firstChild)) {
-                                $fragment->firstChild->remove();
+                                $fragment->removeChild($fragment->firstChild);
                             }
                             while ($fragment->lastChild && $this->isWhitespace($fragment->lastChild)) {
-                                $fragment->lastChild->remove();
+                                $fragment->removeChild($fragment->lastChild);
                             }
 
                             // If the fragment contains anything, wrap it in a paragraph and
@@ -1047,7 +1058,7 @@ final class Readability
                 $contentScore += 1;
 
                 // Add points for any commas within this paragraph.
-                $contentScore += preg_match_all(RegExps::COMMAS, $innerText) + 1;
+                $contentScore += (int) preg_match_all(RegExps::COMMAS, $innerText) + 1;
 
                 // For every 100 characters in this paragraph, add another point. Up to 3 points.
                 $contentScore += min(intdiv(mb_strlen($innerText), 100), 3);
@@ -1351,7 +1362,7 @@ final class Readability
             '/&(quot|amp|apos|lt|gt);/',
             fn (array $m): string => self::HTML_ESCAPE_MAP[$m[1]],
             $str
-        );
+        ) ?? $str;
         return preg_replace_callback(
             '/&#(?:x([0-9a-f]+)|([0-9]+));/i',
             function (array $m): string {
@@ -1363,10 +1374,10 @@ final class Readability
                     $num = 0xFFFD;
                 }
 
-                return mb_chr($num, 'UTF-8');
+                return mb_chr($num, 'UTF-8') ?: "\u{FFFD}";
             },
             $str
-        );
+        ) ?? $str;
     }
 
     /**
@@ -1387,7 +1398,8 @@ final class Readability
             if ($metadata === null && $jsonLdElement->getAttribute('type') === 'application/ld+json') {
                 try {
                     // Strip CDATA markers if present
-                    $content = preg_replace('/^\s*<!\[CDATA\[|\]\]>\s*$/', '', $jsonLdElement->textContent);
+                    $raw = (string) $jsonLdElement->textContent;
+                    $content = preg_replace('/^\s*<!\[CDATA\[|\]\]>\s*$/', '', $raw) ?? $raw;
                     $parsed = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
 
                     if (is_array($parsed) && array_is_list($parsed)) {
@@ -1517,7 +1529,7 @@ final class Readability
                     $matches = $m;
                     // Convert to lowercase, and remove any whitespace
                     // so we can match below.
-                    $name = strtolower(preg_replace('/\s/', '', $m[0]));
+                    $name = strtolower(preg_replace('/\s/', '', $m[0]) ?? $m[0]);
                     // multiple authors
                     $values[$name] = self::jsTrim($content);
                 }
@@ -1526,7 +1538,7 @@ final class Readability
                 $name = $elementName;
                 // Convert to lowercase, remove any whitespace, and convert dots
                 // to colons so we can match below.
-                $name = str_replace('.', ':', strtolower(preg_replace('/\s/', '', $name)));
+                $name = str_replace('.', ':', strtolower(preg_replace('/\s/', '', $name) ?? $name));
                 $values[$name] = self::jsTrim($content);
             }
         }
@@ -1670,6 +1682,11 @@ final class Readability
                 }
 
                 $newImg = $tmp->querySelector('img');
+                if ($prevImg === null || $newImg === null) {
+                    // Unreachable: isSingleImage guarantees both. Keeps the
+                    // null-safety visible to static analysis.
+                    continue;
+                }
                 foreach ($prevImg->attributes as $attr) {
                     if ($attr->value === '') {
                         continue;
@@ -1802,7 +1819,7 @@ final class Readability
         $textContent = self::jsTrim($e->textContent);
 
         if ($normalizeSpaces) {
-            return preg_replace(RegExps::NORMALIZE, ' ', $textContent);
+            return preg_replace(RegExps::NORMALIZE, ' ', $textContent) ?? $textContent;
         }
         return $textContent;
     }
@@ -2145,7 +2162,11 @@ final class Readability
         }
     }
 
-    /** Mirrors _getTextDensity. */
+    /**
+     * Mirrors _getTextDensity.
+     *
+     * @param list<string> $tags
+     */
     private function getTextDensity(\Dom\Element $e, array $tags): float
     {
         $textLength = mb_strlen($this->getInnerText($e, true));
@@ -2420,7 +2441,7 @@ final class Readability
     /** Equivalent of JavaScript's String.prototype.trim (which also trims NBSP etc.). */
     private static function jsTrim(string $str): string
     {
-        return preg_replace(RegExps::TRIM, '', $str);
+        return preg_replace(RegExps::TRIM, '', $str) ?? $str;
     }
 
     /**

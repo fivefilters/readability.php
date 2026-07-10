@@ -36,6 +36,7 @@ Things that intentionally differ from the JS (don't "fix" these): scoring state 
 
 ``` bash
 $ ./vendor/bin/phpunit      # requires PHP 8.4+
+$ ./vendor/bin/psalm        # static analysis; CI runs this too
 $ make test-all             # multiple PHP versions; requires docker and docker-compose
 ```
 

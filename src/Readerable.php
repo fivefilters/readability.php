@@ -72,7 +72,8 @@ final class Readerable
                 continue;
             }
 
-            $textContentLength = mb_strlen(preg_replace(RegExps::TRIM, '', $node->textContent));
+            $text = (string) $node->textContent;
+            $textContentLength = mb_strlen(preg_replace(RegExps::TRIM, '', $text) ?? $text);
             if ($textContentLength < $minContentLength) {
                 continue;
             }

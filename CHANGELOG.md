@@ -19,6 +19,7 @@ Ground-up rewrite on PHP 8.4's native DOM API, at parity with Readability.js v0.
 - `Readerable::isProbablyReaderable()`, a port of Readability-readerable.js
 - `parseDocument()` for callers who already hold a `Dom\HTMLDocument`
 - Cross-check harness (`test/tools/`) that diffs this port's output against Readability.js over the whole corpus
+- Static analysis with [Psalm](https://psalm.dev/) (`composer analyse`), run in CI alongside the test suite
 
 ### Removed
 - HTML5-PHP and PSR-3 dependencies; `ext-xml` requirement
