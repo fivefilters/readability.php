@@ -3,5 +3,6 @@
   "byline": "Andrea Riquier",
   "dir": null,
   "excerpt": "House prices show no sign of slowing down, according to a closely-watched index out Tuesday.",
-  "siteName": "MarketWatch"
+  "siteName": "MarketWatch",
+  "readerable": true
 }

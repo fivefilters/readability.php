@@ -53,10 +53,12 @@ class ReadabilityTest extends TestCase
         $article = $this->parse($testPage->source);
         $expected = $testPage->expectedMetadata;
 
+        // A couple of Mozilla fixtures omit keys entirely (their harness
+        // compares undefined to undefined); treat missing as null.
         $this->assertSame($expected['title'], $article->title, 'title');
-        $this->assertSame($expected['byline'], $article->byline, 'byline');
-        $this->assertSame($expected['excerpt'], $article->excerpt, 'excerpt');
-        $this->assertSame($expected['siteName'], $article->siteName, 'siteName');
+        $this->assertSame($expected['byline'] ?? null, $article->byline, 'byline');
+        $this->assertSame($expected['excerpt'] ?? null, $article->excerpt, 'excerpt');
+        $this->assertSame($expected['siteName'] ?? null, $article->siteName, 'siteName');
         if (!empty($expected['dir'])) {
             $this->assertSame($expected['dir'], $article->dir, 'dir');
         }

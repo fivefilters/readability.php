@@ -61,8 +61,10 @@ foreach (scandir($root) as $dir) {
         $diffs[] = 'PHP failed (' . ($phpError ?? 'unknown') . ') but JS succeeded';
     } else {
         foreach (['title', 'byline', 'dir', 'lang', 'excerpt', 'siteName', 'publishedTime'] as $field) {
-            if ($article->$field !== $js[$field]) {
-                $diffs[] = sprintf('%s: php %s / js %s', $field, var_export($article->$field, true), var_export($js[$field], true));
+            // JSON.stringify drops undefined values, and JS '' metadata maps to PHP null.
+            $jsValue = ($js[$field] ?? null) ?: null;
+            if (($article->$field ?: null) !== $jsValue) {
+                $diffs[] = sprintf('%s: php %s / js %s', $field, var_export($article->$field, true), var_export($js[$field] ?? null, true));
             }
         }
         $contentDiff = DomCompare::compare($js['content'], $article->content);
