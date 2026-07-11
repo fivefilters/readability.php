@@ -142,12 +142,21 @@ As in 3.x, the URLs are absolutized when `fixRelativeURLs` is enabled.
 
 ### Byline: `articleByline` → `keepInlineByline`
 
+> **⚠️ Default behavior changed.** In 3.x, `articleByline` defaulted to `false`, which meant an inline byline (e.g. `<p class="byline">By Jane Doe</p>`) was **left in the content**. In 4.0 the default is to **remove** it from the content (matching Readability.js). If you relied on the 3.x default and want the byline to stay in `$article->content`, set `keepInlineByline: true`.
+
 In 3.x, `articleByline` (default `false`) both enabled byline *detection* and, when on, removed the byline from the content. In 4.0 the byline is **always extracted** into `$article->byline` (matching Readability.js), and the new `keepInlineByline` option only controls whether an inline byline element stays in the content:
 
-- `keepInlineByline: false` (default) — inline byline removed from content, as in Readability.js.
-- `keepInlineByline: true` — inline byline kept in the content; still available as `$article->byline`.
+| | 3.x (`articleByline`) | 4.0 (`keepInlineByline`) |
+| --- | --- | --- |
+| Default value | `false` | `false` |
+| Byline in `$article->content` by default | **kept** | **removed** |
+| `$article->byline` populated | only when `articleByline: true` | always |
+| To keep the byline in the content | (default) | `keepInlineByline: true` |
 
-Note the default behavior differs from a 3.x install that never set `articleByline`: there the byline text stayed in the content. Set `keepInlineByline: true` to restore that.
+```php
+// Restore the 3.x default (byline stays in the content):
+$configuration = new Configuration(keepInlineByline: true);
+```
 
 ### PSR-3 logging
 
