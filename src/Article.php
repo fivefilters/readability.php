@@ -32,6 +32,19 @@ final readonly class Article
         public ?string $siteName,
         /** Published time, if found. */
         public ?string $publishedTime,
+        /**
+         * The lead image URL (from og:image/twitter:image, or a
+         * <link rel="img_src">), if found. PHP-specific; not part of
+         * Readability.js. Absolute when fixRelativeURLs is enabled.
+         */
+        public ?string $image,
+        /**
+         * All image URLs found for the article: the lead image (if any)
+         * followed by every <img> in the content, de-duplicated. PHP-specific.
+         *
+         * @var list<string>
+         */
+        public array $images,
         /** The article content as a DOM element, for callers who want to keep working on the tree. */
         public \Dom\Element $contentElement,
     ) {

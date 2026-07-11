@@ -30,6 +30,7 @@
         "php": ">=8.4",
         "ext-dom": "*",
         "ext-mbstring": "*",
+        "psr/log": "^2.0 || ^3.0",
         "rowbot/url": "^4.1"
     },
     "suggest": {

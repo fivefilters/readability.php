@@ -58,7 +58,8 @@ Getters on the Readability instance became properties on the returned `Article`:
 | `$readability->getDirection()` | `$article->dir` |
 | `$readability->getDOMDocument()` | `$article->contentElement` (see below) |
 | `echo $readability;` | `echo $article;` (same as `$article->content`) |
-| `$readability->getImage()`, `->getImages()` | removed (see below) |
+| `$readability->getImage()` | `$article->image` |
+| `$readability->getImages()` | `$article->images` |
 | — | new: `$article->textContent` (plain text) |
 | — | new: `$article->length` (character count of textContent) |
 | — | new: `$article->lang` |
@@ -109,45 +110,70 @@ Option mapping:
 | `stripUnlikelyCandidates` | `stripUnlikelyCandidates` | unchanged |
 | `weightClasses` | `weightClasses` | unchanged |
 | `cleanConditionally` | `cleanConditionally` | unchanged |
-| `articleByline` | removed | byline detection is always on, as in Readability.js |
+| `articleByline` | `keepInlineByline` | see the note below; the byline is now always extracted, and this only controls whether it stays in the content |
+| `logger` (PSR-3) | `logger` | still a PSR-3 `LoggerInterface`; passed as a named argument instead of via `setLogger()` |
 | `parser` | removed | always the native Lexbor parser |
 | `substituteEntities` | removed | libxml workaround, no longer needed |
 | `normalizeEntities` | removed | libxml workaround, no longer needed |
 | `summonCthulhu` | removed | libxml workaround, no longer needed |
-| `logger` (PSR-3) | removed | use `debug: true` (see below) |
 | — | `debug` | new: log via `error_log()`, like Readability.js's debug flag |
 | — | `maxElemsToParse` | new, from Readability.js |
 | — | `classesToPreserve` | new, from Readability.js |
 | — | `allowedVideoRegex` | new, from Readability.js |
 | — | `linkDensityModifier` | new, from Readability.js 0.6.0 |
 
-## Removed features and their replacements
+## Changed features
 
-### Image extraction (`getImage()` / `getImages()`)
+### Image extraction: `getImage()` / `getImages()` → `$article->image` / `->images`
 
-Not part of Readability.js, so dropped. Both are a few lines with the new DOM API if you need them:
+Image extraction (not part of Readability.js) is kept, moved onto the result object:
 
 ```php
-// Images inside the extracted article (was: getImages())
-$images = [];
-foreach ($article->contentElement->querySelectorAll('img[src]') as $img) {
-    $images[] = $img->getAttribute('src');
-}
+// 3.x
+$mainImage = $readability->getImage();     // og:image / twitter:image / <link rel="img_src">
+$allImages = $readability->getImages();    // main image + every <img> in the content
 
-// The page's "main" image (was: getImage()) — read it off the original document
-$doc = \Dom\HTMLDocument::createFromString($html, LIBXML_NOERROR);
-$mainImage = $doc->querySelector('meta[property="og:image"]')?->getAttribute('content');
+// 4.0
+$mainImage = $article->image;              // ?string
+$allImages = $article->images;             // string[] (lead image first, de-duplicated)
 ```
+
+As in 3.x, the URLs are absolutized when `fixRelativeURLs` is enabled.
+
+### Byline: `articleByline` → `keepInlineByline`
+
+In 3.x, `articleByline` (default `false`) both enabled byline *detection* and, when on, removed the byline from the content. In 4.0 the byline is **always extracted** into `$article->byline` (matching Readability.js), and the new `keepInlineByline` option only controls whether an inline byline element stays in the content:
+
+- `keepInlineByline: false` (default) — inline byline removed from content, as in Readability.js.
+- `keepInlineByline: true` — inline byline kept in the content; still available as `$article->byline`.
+
+Note the default behavior differs from a 3.x install that never set `articleByline`: there the byline text stayed in the content. Set `keepInlineByline: true` to restore that.
 
 ### PSR-3 logging
 
-Replaced by the `debug` option, matching Readability.js. With `debug: true`, the same messages Readability.js logs go to `error_log()`. There is no logger injection point anymore; if you need the output somewhere specific, set PHP's `error_log` ini setting for the duration of the call.
+Still supported. Pass a PSR-3 `LoggerInterface` as the `logger` option instead of calling `setLogger()`:
+
+```php
+// 3.x
+$configuration->setLogger($myLogger);
+
+// 4.0
+$configuration = new Configuration(logger: $myLogger);
+```
+
+Debug messages are sent to the logger independently of the `debug` flag (which only controls `error_log()` output).
+
+## Removed features
+
+- `parser`, `substituteEntities`, `normalizeEntities`, `summonCthulhu` — all were libxml/HTML5-PHP workarounds and have no equivalent (the native Lexbor parser doesn't have the bugs they patched).
+- `getDOMDocument(false)` — the whole-document variant is gone; `$article->contentElement` gives the extracted content only. If you need the full page, parse it yourself with `\Dom\HTMLDocument::createFromString()` and pass it to `parseDocument()`.
+- `getPathInfo()`, `loadHTML()`, `setExcerpt()` — internal helpers, not carried over.
 
 ## Behavior changes to be aware of
 
 - **`parse()` never returns `false`/`bool`.** It returns an `Article` or throws `ParseException` — including for empty input, documents over `maxElemsToParse`, and pages where no article could be found (all cases where Readability.js returns `null`).
 - **The content is wrapped** in `<div id="readability-page-1" class="page">…</div>`, exactly as Readability.js outputs. If you post-process the HTML, account for the wrapper.
-- **Byline is always detected and removed from the content.** In 3.x this only happened with `articleByline` enabled.
+- **The byline is always extracted, and inline bylines are removed from the content by default** (see `keepInlineByline` above). A 3.x install that never set `articleByline` kept the byline in the content.
 - **Relative URL fixing follows the WHATWG URL Standard** (what browsers and Readability.js do), via PHP 8.5's native `Uri\WhatWg\Url` or rowbot/url on PHP 8.4. Edge-case outputs may differ slightly from 3.x's RFC 3986 resolution (e.g. `https://example.com` serializes as `https://example.com/`).
 - **Encoding:** input is parsed with the encoding declared in the document, defaulting to UTF-8 (as a browser would). The 3.x mb_* guessing hacks are gone — supply UTF-8 or make sure the document declares its charset.
 - **Class attributes** are stripped by default as before (`keepClasses: false`), but the preserved-classes list now also honors `classesToPreserve`.

@@ -56,9 +56,13 @@ $article->siteName;      // ?string – name of the site
 $article->dir;           // ?string – content direction (ltr/rtl)
 $article->lang;          // ?string – content language
 $article->publishedTime; // ?string – published time
+$article->image;         // ?string – lead image URL (og:image/twitter:image/link)
+$article->images;        // string[] – lead image + all content images, de-duplicated
 $article->contentElement; // \Dom\Element – content as a DOM element
 echo $article;           // same as $article->content
 ```
+
+`image` and `images` are a PHP-specific addition (Readability.js has no image extraction). When `fixRelativeURLs` is enabled they are returned as absolute URLs.
 
 So for finer control over the output, wrap the properties in your own HTML:
 
@@ -115,6 +119,8 @@ PHP-specific options (a browser knows the page URL; this library must be told):
 
 - **fixRelativeURLs**: default `false`, convert relative URLs to absolute.
 - **originalURL**: default `null`, the URL the article was fetched from, used as the base for URL fixing. A `<base href>` in the document is honored too.
+- **logger**: default `null`, an optional PSR-3 `LoggerInterface`. When set, debug messages are also sent to it (independently of the `debug` flag, which only controls `error_log()`).
+- **keepInlineByline**: default `false`. By default an inline byline (e.g. a `<p class="byline">By Jane Doe</p>`) is removed from the content, as in Readability.js. Set this to `true` to keep it in the content; either way it is still extracted into `$article->byline`.
 
 Toggles for internal Readability flags carried over from earlier versions (always on in Readability.js):
 
@@ -135,8 +141,9 @@ Websites that load their content through JavaScript (lazy loading, AJAX) will no
 ## Dependencies
 
 - [rowbot/url](https://github.com/TRowbotham/URL-Parser) for [WHATWG URL Standard](https://url.spec.whatwg.org/) relative URL resolution on PHP 8.4. On PHP 8.5+ the native [`Uri\WhatWg\Url`](https://www.php.net/manual/en/class.uri-whatwg-url.php) class is used automatically instead — the same URL parser Readability.js gets from the browser's `new URL()`.
+- [psr/log](https://www.php-fig.org/psr/psr-3/) for the optional PSR-3 `logger` option (interfaces only).
 
-That's it — parsing and serialization use PHP's own DOM extension.
+Otherwise, parsing and serialization use PHP's own DOM extension.
 
 ## How it works
 

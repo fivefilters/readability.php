@@ -7,10 +7,12 @@ Ground-up rewrite on PHP 8.4's native DOM API, at parity with Readability.js v0.
 
 ### Changed
 - Requires PHP >= 8.4; parsing and serialization use `Dom\HTMLDocument` (the WHATWG-spec Lexbor parser bundled with PHP), replacing HTML5-PHP and the legacy libxml path
-- `parse()` now returns a readonly `Article` value object (`title`, `content`, `textContent`, `length`, `excerpt`, `byline`, `siteName`, `dir`, `lang`, `publishedTime`, `contentElement`) and throws `ParseException` when no article is found
+- `parse()` now returns a readonly `Article` value object (`title`, `content`, `textContent`, `length`, `excerpt`, `byline`, `siteName`, `dir`, `lang`, `publishedTime`, `image`, `images`, `contentElement`) and throws `ParseException` when no article is found
 - `Configuration` is a readonly object with named constructor arguments; `maxTopCandidates` renamed to `nbTopCandidates` (matching Readability.js)
 - Article output is wrapped in `<div id="readability-page-1" class="page">`, as in Readability.js
-- Byline detection always runs (previously opt-in via `articleByline`)
+- Byline is always extracted into `Article::$byline`; the `articleByline` option becomes `keepInlineByline`, which only controls whether an inline byline stays in the content (default removes it, as in Readability.js)
+- Image extraction moved onto the result object: `getImage()`/`getImages()` become `$article->image` / `$article->images`
+- PSR-3 logging kept: pass a `LoggerInterface` as the `logger` option instead of `setLogger()`
 - Relative URL resolution now uses a real WHATWG URL parser — PHP 8.5's native `Uri\WhatWg\Url` when available, [rowbot/url](https://github.com/TRowbotham/URL-Parser) on PHP 8.4 — matching the `new URL()` behavior Readability.js relies on; replaces league/uri
 - Test corpus replaced with Mozilla's 130 test pages verbatim; content comparison ports Mozilla's structural DOM comparison
 
@@ -22,9 +24,8 @@ Ground-up rewrite on PHP 8.4's native DOM API, at parity with Readability.js v0.
 - Static analysis with [Psalm](https://psalm.dev/) (`composer analyse`), run in CI alongside the test suite
 
 ### Removed
-- HTML5-PHP and PSR-3 dependencies; `ext-xml` requirement
+- HTML5-PHP dependency; `ext-xml` requirement
 - Options that existed as libxml workarounds: `parser`, `substituteEntities`, `normalizeEntities`, `summonCthulhu`
-- Image extraction (`getImage()`/`getImages()`) — not part of Readability.js
 - The custom DOM subclass layer (`src/Nodes/`) and its workarounds (attribute-based state, shifting-aware iteration)
 
 ## [v3.3.3](https://github.com/fivefilters/readability.php/releases/tag/v3.3.3)

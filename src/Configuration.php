@@ -14,6 +14,12 @@ final class Configuration
     public function __construct(
         /** Whether to output debug messages via error_log() (JS: debug). */
         public readonly bool $debug = false,
+        /**
+         * PHP-specific: an optional PSR-3 logger. When set, Readability's debug
+         * messages are sent to it (independently of the debug flag, which only
+         * governs error_log()). Reinstated from readability.php 3.x.
+         */
+        public readonly ?\Psr\Log\LoggerInterface $logger = null,
         /** The maximum number of elements to parse; 0 means no limit (JS: maxElemsToParse). */
         public readonly int $maxElemsToParse = 0,
         /** The number of top candidates to consider when analysing how tight the competition is among candidates (JS: nbTopCandidates). */
@@ -36,6 +42,13 @@ final class Configuration
          */
         public readonly bool $fixRelativeURLs = false,
         public readonly ?string $originalURL = null,
+        /**
+         * PHP-specific: keep an inline byline (e.g. a "By Jane Doe" element) in
+         * the article content instead of removing it. The byline is still
+         * extracted into Article::$byline either way. Readability.js always
+         * removes it; readability.php 3.x kept it unless articleByline was set.
+         */
+        public readonly bool $keepInlineByline = false,
         /** Internal flag toggles carried over from the previous major version (always on in JS). */
         public readonly bool $stripUnlikelyCandidates = true,
         public readonly bool $weightClasses = true,

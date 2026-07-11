@@ -166,6 +166,10 @@ final class Readability
             $this->metadata = $metadata;
             $this->articleTitle = $metadata['title'];
 
+            // PHP-specific: capture the lead image before grabArticle mutates
+            // the tree (the source meta/link tags live in <head>).
+            $leadImage = $this->getLeadImageUrl();
+
             $articleContent = $this->grabArticle();
             if (!$articleContent) {
                 throw ParseException::noContent();
@@ -187,6 +191,14 @@ final class Readability
 
             $textContent = $articleContent->textContent;
 
+            // PHP-specific: content <img> src attributes were already made
+            // absolute by postProcessContent (when fixRelativeURLs is on); the
+            // lead image comes from <head>, so absolutize it the same way.
+            if ($leadImage !== null && $this->configuration->fixRelativeURLs && $this->baseURI !== null) {
+                $leadImage = $this->toAbsoluteURI($leadImage);
+            }
+            $images = $this->collectImages($articleContent, $leadImage);
+
             return new Article(
                 title: $this->articleTitle ?? '',
                 byline: self::pick($metadata['byline'], $this->articleByline),
@@ -198,6 +210,8 @@ final class Readability
                 excerpt: self::pick($metadata['excerpt']),
                 siteName: self::pick($metadata['siteName'], $this->articleSiteName),
                 publishedTime: self::pick($metadata['publishedTime']),
+                image: $leadImage,
+                images: $images,
                 contentElement: $articleContent,
             );
         } finally {
@@ -394,6 +408,52 @@ final class Readability
                 $media->setAttribute('srcset', $newSrcset ?? $srcset);
             }
         }
+    }
+
+    /**
+     * PHP-specific (not in Readability.js): the page's lead/main image URL,
+     * from an og:image or twitter:image meta tag, falling back to a
+     * <link rel="img_src"> / <link rel="image_src">. Reinstated from
+     * readability.php 3.x.
+     */
+    private function getLeadImageUrl(): ?string
+    {
+        foreach ($this->getAllNodesWithTag($this->doc, ['meta']) as $meta) {
+            $property = strtolower(self::jsTrim($meta->getAttribute('property') ?? $meta->getAttribute('name') ?? ''));
+            if (($property === 'og:image' || $property === 'twitter:image') && ($content = (string) $meta->getAttribute('content')) !== '') {
+                return $content;
+            }
+        }
+        foreach ($this->getAllNodesWithTag($this->doc, ['link']) as $link) {
+            $rel = $link->getAttribute('rel');
+            if (($rel === 'img_src' || $rel === 'image_src') && ($href = (string) $link->getAttribute('href')) !== '') {
+                return $href;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * PHP-specific: the list of image URLs for the article — the lead image
+     * (if any) followed by every content <img> src, de-duplicated. Content
+     * srcs are already absolute here when fixRelativeURLs is enabled (see
+     * fixRelativeUris); the lead image is absolutized by the caller.
+     *
+     * @return list<string>
+     */
+    private function collectImages(\Dom\Element $content, ?string $leadImage): array
+    {
+        $urls = [];
+        if ($leadImage !== null) {
+            $urls[] = $leadImage;
+        }
+        foreach ($this->getAllNodesWithTag($content, ['img']) as $img) {
+            $src = (string) $img->getAttribute('src');
+            if ($src !== '') {
+                $urls[] = $src;
+            }
+        }
+        return array_values(array_unique($urls));
     }
 
     /** The toAbsoluteURI closure inside _fixRelativeUris. */
@@ -931,8 +991,12 @@ final class Readability
                         }
                     }
                     $this->articleByline = self::jsTrim(($itemPropNameNode ?? $node)->textContent);
-                    $node = $this->removeAndGetNext($node);
-                    continue;
+                    // JS always removes the byline node; PHP can keep it in the
+                    // content (the byline is still recorded above either way).
+                    if (!$this->configuration->keepInlineByline) {
+                        $node = $this->removeAndGetNext($node);
+                        continue;
+                    }
                 }
 
                 if ($shouldRemoveTitleHeader && $this->headerDuplicatesTitle($node)) {
@@ -2461,7 +2525,8 @@ final class Readability
     /** The this.log shim: enabled by Configuration::debug (JS: options.debug). */
     private function log(mixed ...$args): void
     {
-        if (!$this->configuration->debug) {
+        $logger = $this->configuration->logger;
+        if (!$this->configuration->debug && $logger === null) {
             return;
         }
         $format = function (mixed $arg): string {
@@ -2477,6 +2542,10 @@ final class Readability
             }
             return is_scalar($arg) || $arg === null ? (string) $arg : var_export($arg, true);
         };
-        error_log('Reader: (Readability) ' . implode(' ', array_map($format, $args)));
+        $message = implode(' ', array_map($format, $args));
+        $logger?->debug($message);
+        if ($this->configuration->debug) {
+            error_log('Reader: (Readability) ' . $message);
+        }
     }
 }
