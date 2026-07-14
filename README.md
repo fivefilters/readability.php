@@ -6,7 +6,7 @@ PHP port of *Mozilla's* **[Readability.js](https://github.com/mozilla/readabilit
 
 ![Screenshot](https://raw.githubusercontent.com/fivefilters/readability.php/assets/screenshot.png)
 
-Version 4.0 is a ground-up rewrite on PHP's native HTML parser ([Lexbor, included in PHP 8.4's DOM extension](https://blog.keyvan.net/p/parsing-html-with-php-84)), transcribed method-for-method from Readability.js v0.6.0. It parses HTML the way modern browsers do, needs no third-party parsing library, and is tested against Mozilla's own test corpus.
+Version 4.0 is a ground-up rewrite, produced using [Claude](https://claude.com/claude-code) (Anthropic's AI coding tool), to bring the code in line with the latest version of Readability.js (v0.6.0, transcribed method-for-method) and to take advantage of the new, faster native HTML parser introduced in PHP 8.4 ([Lexbor, included in the DOM extension](https://blog.keyvan.net/p/parsing-html-with-php-84)) and the new WHATWG URL parser introduced in PHP 8.5. It parses HTML the way modern browsers do, needs no third-party HTML parsing library, and is tested against Mozilla's own test corpus.
 
 **Original Developer**: Andres Rey
 
@@ -82,14 +82,27 @@ foreach ($article->contentElement->querySelectorAll('img[src]') as $img) {
 
 If you already have a `\Dom\HTMLDocument` (for example because you want to pre-process it), use `parseDocument()` instead of `parse()`. Note that the document is modified in place while the article is extracted.
 
-There is also a port of Mozilla's `isProbablyReaderable`, a quick check for whether it's worth running the full parse:
+### Checking if a page is readerable
+
+There is also a port of Mozilla's `isProbablyReaderable`: a quick-and-dirty way of figuring out if it's plausible that a page contains an article, without the cost of running the full parse. Like the original, it can produce both false positives and false negatives, but it's cheap enough to run on pages as they come in:
 
 ```php
 use fivefilters\Readability\Readerable;
 
+// Only run the full parse if we suspect it will produce a meaningful result.
 if (Readerable::isProbablyReaderable($html)) {
-    // ...
+    $article = new Readability(new Configuration())->parse($html);
 }
+```
+
+It accepts an HTML string or a `\Dom\HTMLDocument`, and takes the same optional tuning parameters as Readability.js (same defaults):
+
+- **minContentLength**: default `140`, the minimum node content length used to decide if the document is readerable;
+- **minScore**: default `20`, the minimum cumulated 'score' used to determine if the document is readerable;
+- **visibilityChecker**: default `Readerable::isNodeVisible(...)`, the function used to determine if a node is visible.
+
+```php
+Readerable::isProbablyReaderable($html, minScore: 0, minContentLength: 120);
 ```
 
 ## Options
