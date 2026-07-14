@@ -8,7 +8,7 @@ Ground-up port from the latest Readability.js (v0.6.0) using Claude's Fable mode
 ### Changed
 - Requires PHP >= 8.4; parsing and serialization use `Dom\HTMLDocument` (the WHATWG-spec Lexbor parser bundled with PHP), replacing HTML5-PHP and the legacy libxml path
 - `parse()` now returns a readonly `Article` value object (`title`, `content`, `textContent`, `length`, `excerpt`, `byline`, `siteName`, `dir`, `lang`, `publishedTime`, `image`, `images`, `contentElement`) and throws `ParseException` when no article is found
-- `Configuration` is a readonly object with named constructor arguments; `maxTopCandidates` renamed to `nbTopCandidates` (matching Readability.js)
+- Options are passed directly to the `Readability` constructor as named arguments, like the options object in Readability.js (`new Readability(fixRelativeURLs: true)`), and are all optional; a readonly `Configuration` object taking the same named arguments can be passed instead. `maxTopCandidates` renamed to `nbTopCandidates` (matching Readability.js)
 - Article output is wrapped in `<div id="readability-page-1" class="page">`, as in Readability.js
 - Byline is always extracted into `Article::$byline`; the `articleByline` option becomes `keepInlineByline`, which only controls whether an inline byline stays in the content (default removes it, as in Readability.js)
 - Image extraction moved onto the result object: `getImage()`/`getImages()` become `$article->image` / `$article->images`
