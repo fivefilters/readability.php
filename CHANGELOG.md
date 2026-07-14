@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ## [v4.0.0](https://github.com/fivefilters/readability.php/releases/tag/v4.0.0)
 
-Ground-up rewrite on PHP 8.4's native DOM API, at parity with Readability.js v0.6.0 (git master). See [UPGRADE.md](UPGRADE.md) for the full 3.x → 4.0 migration guide.
+Ground-up port from the latest Readability.js (v0.6.0) using Claude's Fable model. Uses PHP 8.4's new DOM API and native parser. See [UPGRADE.md](UPGRADE.md) for the full 3.x → 4.0 migration guide.
 
 ### Changed
 - Requires PHP >= 8.4; parsing and serialization use `Dom\HTMLDocument` (the WHATWG-spec Lexbor parser bundled with PHP), replacing HTML5-PHP and the legacy libxml path
@@ -12,7 +12,7 @@ Ground-up rewrite on PHP 8.4's native DOM API, at parity with Readability.js v0.
 - Article output is wrapped in `<div id="readability-page-1" class="page">`, as in Readability.js
 - Byline is always extracted into `Article::$byline`; the `articleByline` option becomes `keepInlineByline`, which only controls whether an inline byline stays in the content (default removes it, as in Readability.js)
 - Image extraction moved onto the result object: `getImage()`/`getImages()` become `$article->image` / `$article->images`
-- PSR-3 logging kept: pass a `LoggerInterface` as the `logger` option instead of `setLogger()`
+- PSR-3 logging: pass a `LoggerInterface` as the `logger` option instead of `setLogger()`
 - Relative URL resolution now uses a real WHATWG URL parser — PHP 8.5's native `Uri\WhatWg\Url` when available, [rowbot/url](https://github.com/TRowbotham/URL-Parser) on PHP 8.4 — matching the `new URL()` behavior Readability.js relies on; replaces league/uri
 - Test corpus replaced with Mozilla's 130 test pages verbatim; content comparison ports Mozilla's structural DOM comparison
 
