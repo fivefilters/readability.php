@@ -143,7 +143,7 @@ class ReadabilityTest extends TestCase
             originalURL: self::TEST_URL,
         ));
 
-        return $readability->parseDocument($document);
+        return $readability->parse($document);
     }
 
     private function removeCommentNodesRecursively(\Dom\Node $node): void

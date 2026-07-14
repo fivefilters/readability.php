@@ -22,7 +22,7 @@ class ReadabilityUnitTest extends TestCase
             originalURL: 'http://fakehost/test/page.html',
         );
         $reflection = new \ReflectionClass($readability);
-        // toAbsoluteURI reads the base URI resolved by parseDocument; set it directly.
+        // toAbsoluteURI reads the base URI resolved by parse(); set it directly.
         foreach (['baseURI' => 'http://fakehost/test/page.html', 'documentURI' => 'http://fakehost/test/page.html'] as $property => $value) {
             $reflection->getProperty($property)->setValue($readability, $value);
         }

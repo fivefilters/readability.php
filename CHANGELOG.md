@@ -19,7 +19,7 @@ Ground-up port from the latest Readability.js (v0.6.0) using Claude's Fable mode
 ### Added
 - Parity with Readability.js 0.6.0: `lang` and `publishedTime` output; `maxElemsToParse`, `classesToPreserve`, `allowedVideoRegex`, `linkDensityModifier` and `debug` options; aria-modal dialog removal; ad/loading-indicator stripping; parsely/`article:author`/`itemprop` metadata sources; JSON-LD `@graph`, `@context`-object and array handling; Unicode comma scoring; updated regexes (mathjax, bilibili, en/em-dash title separators)
 - `Readerable::isProbablyReaderable()`, a port of Readability-readerable.js
-- `parseDocument()` for callers who already hold a `Dom\HTMLDocument`
+- `parse()` accepts an already-parsed `Dom\HTMLDocument` as well as an HTML string
 - Cross-check harness (`test/tools/`) that diffs this port's output against Readability.js over the whole corpus
 - Static analysis with [Psalm](https://psalm.dev/) (`composer analyse`), run in CI alongside the test suite
 
