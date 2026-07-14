@@ -92,29 +92,41 @@ class ReadabilityTest extends TestCase
         $this->expectException(ParseException::class);
         // html, head, body, div — parsing produces a full document
         $this->expectExceptionMessage('Aborting parsing document; 4 elements found');
-        new Readability(new Configuration(maxElemsToParse: 1))->parse('<html><div>yo</div></html>');
+        new Readability(maxElemsToParse: 1)->parse('<html><div>yo</div></html>');
     }
 
     public function testCustomAllowedVideoRegex(): void
     {
         $source = '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc mollis leo lacus, vitae semper nisl ullamcorper ut.</p>'
             . '<iframe src="https://mycustomdomain.com/some-embeds"></iframe>';
-        $article = new Readability(new Configuration(
+        $article = new Readability(
             charThreshold: 20,
             allowedVideoRegex: '/.*mycustomdomain.com.*/',
-        ))->parse($source);
+        )->parse($source);
         $this->assertStringContainsString('<iframe src="https://mycustomdomain.com/some-embeds">', $article->content);
     }
 
     public function testKeepClasses(): void
     {
         $source = '<div class="wrapper"><p class="lead">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc mollis leo lacus, vitae semper nisl ullamcorper ut.</p></div>';
-        $kept = new Readability(new Configuration(charThreshold: 20, keepClasses: true))->parse($source);
+        $kept = new Readability(charThreshold: 20, keepClasses: true)->parse($source);
         $this->assertStringContainsString('class="lead"', $kept->content);
-        $stripped = new Readability(new Configuration(charThreshold: 20))->parse($source);
+        $stripped = new Readability(charThreshold: 20)->parse($source);
         $this->assertStringNotContainsString('class="lead"', $stripped->content);
-        $preserved = new Readability(new Configuration(charThreshold: 20, classesToPreserve: ['lead']))->parse($source);
+        $preserved = new Readability(charThreshold: 20, classesToPreserve: ['lead'])->parse($source);
         $this->assertStringContainsString('class="lead"', $preserved->content);
+    }
+
+    public function testConfigurationObjectAndNamedOptionsCannotBeMixed(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        new Readability(new Configuration(), charThreshold: 20);
+    }
+
+    public function testUnknownOptionThrows(): void
+    {
+        $this->expectException(\Error::class);
+        new Readability(noSuchOption: true);
     }
 
     private function parse(string $source): Article

@@ -33,7 +33,7 @@ try {
 **4.0** — `parse()` returns a readonly `Article` value object (or throws):
 
 ```php
-$readability = new Readability(new Configuration());
+$readability = new Readability(); // options are named constructor arguments now, all optional
 
 try {
     $article = $readability->parse($html);
@@ -79,7 +79,7 @@ $firstParagraph = $element->querySelector('p'); // CSS selectors work natively
 
 ## Configuration
 
-3.x used an options array (or fluent setters). 4.0 uses a readonly object with named constructor arguments:
+3.x required a `Configuration` built from an options array (or fluent setters). In 4.0, options are named arguments passed directly to `Readability` (like the options object in Readability.js), and they're all optional — `new Readability()` uses the defaults:
 
 ```php
 // 3.x
@@ -88,14 +88,16 @@ $configuration = new Configuration([
     'originalURL' => 'https://example.com/article.html',
 ]);
 // or: $configuration->setFixRelativeURLs(true)->setOriginalURL('...');
+$readability = new Readability($configuration);
 
 // 4.0
-$configuration = new Configuration(
+$readability = new Readability(
     fixRelativeURLs: true,
     originalURL: 'https://example.com/article.html',
 );
-// or: Configuration::fromArray(['fixRelativeURLs' => true, 'originalURL' => '...'])
 ```
+
+A readonly `Configuration` object still exists, taking the same named arguments, for options built up separately or shared between instances: `new Readability(new Configuration(fixRelativeURLs: true))`. To build one from an options array, use `Configuration::fromArray(['fixRelativeURLs' => true])`.
 
 Option mapping:
 
@@ -155,7 +157,7 @@ In 3.x, `articleByline` (default `false`) both enabled byline *detection* and, w
 
 ```php
 // Restore the 3.x default (byline stays in the content):
-$configuration = new Configuration(keepInlineByline: true);
+$readability = new Readability(keepInlineByline: true);
 ```
 
 ### PSR-3 logging
@@ -167,7 +169,7 @@ Still supported. Pass a PSR-3 `LoggerInterface` as the `logger` option instead o
 $configuration->setLogger($myLogger);
 
 // 4.0
-$configuration = new Configuration(logger: $myLogger);
+$readability = new Readability(logger: $myLogger);
 ```
 
 Debug messages are sent to the logger independently of the `debug` flag (which only controls `error_log()` output).

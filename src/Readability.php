@@ -91,8 +91,24 @@ final class Readability
     private ?string $baseURI = null;
     private ?string $documentURI = null;
 
-    public function __construct(private readonly Configuration $configuration = new Configuration())
+    private readonly Configuration $configuration;
+
+    /**
+     * Options can be passed directly as named arguments — the PHP equivalent
+     * of Readability.js's options argument — e.g.
+     * new Readability(fixRelativeURLs: true, charThreshold: 20).
+     * See Configuration for the available options and their defaults.
+     * A pre-built Configuration is accepted too, for options built up
+     * separately or shared between instances.
+     *
+     * @param mixed ...$options Configuration options as named arguments
+     */
+    public function __construct(?Configuration $configuration = null, mixed ...$options)
     {
+        if ($configuration !== null && $options !== []) {
+            throw new \InvalidArgumentException('Pass either a Configuration object or options as named arguments, not both.');
+        }
+        $this->configuration = $configuration ?? Configuration::fromArray($options);
         $this->doc = \Dom\HTMLDocument::createEmpty();
         $this->scores = new \SplObjectStorage();
         $this->dataTables = new \SplObjectStorage();
