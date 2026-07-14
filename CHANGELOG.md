@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [v4.0.0](https://github.com/fivefilters/readability.php/releases/tag/v4.0.0)
+## [v4.0.0-beta.1](https://github.com/fivefilters/readability.php/releases/tag/v4.0.0-beta.1)
 
 Ground-up port from the latest Readability.js (v0.6.0) using Claude's Fable model. Uses PHP 8.4's new DOM API and native parser. See [UPGRADE.md](UPGRADE.md) for the full 3.x → 4.0 migration guide.
 

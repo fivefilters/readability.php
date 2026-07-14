@@ -11,8 +11,10 @@ Version 4.0 is a ground-up rewrite on PHP's native DOM extension (the Lexbor HTM
 | HTML parser | libxml or HTML5-PHP | native (Lexbor) |
 
 ```bash
-composer require "fivefilters/readability.php:^4.0"
+composer require "fivefilters/readability.php:^4.0@beta"
 ```
+
+(The `@beta` stability flag is needed while 4.0 is in beta; drop it once the stable release is out.)
 
 ## The one-minute version
 
