@@ -253,11 +253,12 @@ final class Readability
      */
     private function postProcessContent(\Dom\Element $articleContent): void
     {
-        // Readability cannot open relative uris so we convert them to absolute uris.
-        // (PHP: opt-in, since there is no live document to take a base URL from.)
-        if ($this->configuration->fixRelativeURLs && $this->baseURI !== null) {
-            $this->fixRelativeUris($articleContent);
-        }
+        // Neutralize javascript: links and (opt-in) convert relative uris to
+        // absolute ones. The javascript: handling always runs — it matches
+        // Readability.js, needs no base URL, and is a defense-in-depth measure.
+        // Absolutizing relative uris is opt-in (PHP has no live document to
+        // take a base URL from) and is gated inside fixRelativeUris().
+        $this->fixRelativeUris($articleContent);
 
         $this->simplifyNestedElements($articleContent);
 
@@ -360,6 +361,11 @@ final class Readability
      */
     private function fixRelativeUris(\Dom\Element $articleContent): void
     {
+        // Converting relative uris to absolute ones is opt-in and needs a base
+        // URI. Neutralizing javascript: links, however, always runs — it is a
+        // safety measure that needs no base URL.
+        $absolutize = $this->configuration->fixRelativeURLs && $this->baseURI !== null;
+
         $links = $this->getAllNodesWithTag($articleContent, ['a']);
         foreach ($links as $link) {
             $href = $link->getAttribute('href');
@@ -379,10 +385,14 @@ final class Readability
                         }
                         $link->parentNode->replaceChild($container, $link);
                     }
-                } else {
+                } elseif ($absolutize) {
                     $link->setAttribute('href', $this->toAbsoluteURI($href));
                 }
             }
+        }
+
+        if (!$absolutize) {
+            return;
         }
 
         $medias = $this->getAllNodesWithTag($articleContent, ['img', 'picture', 'figure', 'video', 'audio', 'source']);

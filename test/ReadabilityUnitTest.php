@@ -140,6 +140,28 @@ class ReadabilityUnitTest extends TestCase
         $this->assertSame(['rows' => $rows, 'columns' => $columns], self::invoke('getRowAndColumnCount', $table));
     }
 
+    /**
+     * javascript: links must be neutralized even with the default configuration
+     * (fixRelativeURLs off). Readability.js always strips them; decoupling this
+     * safety step from relative-URL absolutization keeps parity with upstream.
+     */
+    public function testJavascriptLinksNeutralizedWithDefaultConfig(): void
+    {
+        $filler = str_repeat('This is the body of the article with enough text to be selected. ', 12);
+        $html = '<html><body><article><p>'
+            . $filler
+            . '<a href="javascript:alert(1)">click me</a> '
+            . $filler
+            . '</p></article></body></html>';
+
+        // Default configuration: fixRelativeURLs is false.
+        $article = new Readability(new Configuration())->parse($html);
+
+        $this->assertStringNotContainsString('javascript:', $article->content);
+        // The link text is preserved (converted to a text node / span).
+        $this->assertStringContainsString('click me', $article->content);
+    }
+
     public static function getRowAndColumnCountProvider(): array
     {
         return [

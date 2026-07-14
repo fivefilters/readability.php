@@ -184,6 +184,7 @@ Debug messages are sent to the logger independently of the `debug` flag (which o
 - **The content is wrapped** in `<div id="readability-page-1" class="page">…</div>`, exactly as Readability.js outputs. If you post-process the HTML, account for the wrapper.
 - **The byline is always extracted, and inline bylines are removed from the content by default** (see `keepInlineByline` above). A 3.x install that never set `articleByline` kept the byline in the content.
 - **Relative URL fixing follows the WHATWG URL Standard** (what browsers and Readability.js do), via PHP 8.5's native `Uri\WhatWg\Url` or rowbot/url on PHP 8.4. Edge-case outputs may differ slightly from 3.x's RFC 3986 resolution (e.g. `https://example.com` serializes as `https://example.com/`).
+- **`javascript:` links are now neutralized regardless of `fixRelativeURLs`.** Previously this ran only when `fixRelativeURLs` was enabled; it now always runs (matching Readability.js), since stripping the scheme needs no base URL. Absolutizing relative URLs remains opt-in via `fixRelativeURLs`. This is defense-in-depth only — see the Security section of the README; you still need a real sanitizer for untrusted input.
 - **Encoding:** input is parsed with the encoding declared in the document, defaulting to UTF-8 (as a browser would). The 3.x mb_* guessing hacks are gone — supply UTF-8 or make sure the document declares its charset.
 - **Class attributes** are stripped by default as before (`keepClasses: false`), but the preserved-classes list now also honors `classesToPreserve`.
 
