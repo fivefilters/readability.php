@@ -17,14 +17,14 @@ final class Readerable
      * Mirrors isProbablyReaderable.
      *
      * @param \Dom\HTMLDocument|string $document the document, or an HTML string
-     * @param int $minScore the minimum cumulated 'score' used to determine if the document is readerable
+     * @param float $minScore the minimum cumulated 'score' used to determine if the document is readerable
      * @param int $minContentLength the minimum node content length used to decide if the document is readerable
      * @param callable(\Dom\Element): bool|null $visibilityChecker the function used to determine if a node is visible
      * @return bool Whether or not we suspect Readability::parse() will succeed at returning an article
      */
     public static function isProbablyReaderable(
         \Dom\HTMLDocument|string $document,
-        int $minScore = 20,
+        float $minScore = 20,
         int $minContentLength = 140,
         ?callable $visibilityChecker = null,
     ): bool {
