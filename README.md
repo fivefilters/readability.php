@@ -20,7 +20,9 @@ PHP 8.4+, ext-dom, and ext-mbstring.
 
 First require the library using composer:
 
-`composer require "fivefilters/readability.php:>=4.0"`
+`composer require "fivefilters/readability.php:^4.0@beta"`
+
+Version 4.0 is currently in beta, so the `@beta` stability flag is needed; once the stable release is out, `composer require "fivefilters/readability.php:^4.0"` will do.
 
 Then create a Readability instance and feed `parse()` your HTML. It returns an `Article` object:
 
