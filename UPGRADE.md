@@ -186,6 +186,8 @@ Debug messages are sent to the logger independently of the `debug` flag (which o
   ```php
   $html = $article->contentElement->firstElementChild->innerHTML;
   ```
+
+  (`firstElementChild` is the wrapper `div` itself — always the only child of `contentElement` — and `innerHTML` serializes everything inside it, so nothing is lost when the article consists of several top-level elements.)
 - **The byline is always extracted, and inline bylines are removed from the content by default** (see `keepInlineByline` above). A 3.x install that never set `articleByline` kept the byline in the content.
 - **Relative URL fixing follows the WHATWG URL Standard** (what browsers and Readability.js do), via PHP 8.5's native `Uri\WhatWg\Url` or rowbot/url on PHP 8.4. Edge-case outputs may differ slightly from 3.x's RFC 3986 resolution (e.g. `https://example.com` serializes as `https://example.com/`).
 - **Encoding:** input is parsed with the encoding declared in the document, defaulting to UTF-8 (as a browser would). The 3.x mb_* guessing hacks are gone — supply UTF-8 or make sure the document declares its charset.
