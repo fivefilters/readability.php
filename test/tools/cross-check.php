@@ -45,7 +45,7 @@ foreach (scandir($root) as $dir) {
             classesToPreserve: ['caption'],
             fixRelativeURLs: true,
             originalURL: 'http://fakehost/test/page.html',
-        )->parseDocument($document);
+        )->parse($document);
     } catch (\Throwable $e) {
         $article = null;
         $phpError = $e->getMessage();

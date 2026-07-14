@@ -81,7 +81,7 @@ foreach ($article->contentElement->querySelectorAll('img[src]') as $img) {
 }
 ```
 
-If you already have a `\Dom\HTMLDocument` (for example because you want to pre-process it), use `parseDocument()` instead of `parse()`. Note that the document is modified in place while the article is extracted.
+`parse()` also accepts a `\Dom\HTMLDocument` directly (for example because you want to pre-process it). Note that a passed document is modified in place while the article is extracted.
 
 ### Checking if a page is readerable
 

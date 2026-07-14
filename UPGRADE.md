@@ -179,7 +179,7 @@ Debug messages are sent to the logger independently of the `debug` flag (which o
 ## Removed features
 
 - `parser`, `substituteEntities`, `normalizeEntities`, `summonCthulhu` — all were libxml/HTML5-PHP workarounds and have no equivalent (the native Lexbor parser doesn't have the bugs they patched).
-- `getDOMDocument(false)` — the whole-document variant is gone; `$article->contentElement` gives the extracted content only. If you need the full page, parse it yourself with `\Dom\HTMLDocument::createFromString()` and pass it to `parseDocument()`.
+- `getDOMDocument(false)` — the whole-document variant is gone; `$article->contentElement` gives the extracted content only. If you need the full page, parse it yourself with `\Dom\HTMLDocument::createFromString()` and pass the document to `parse()`.
 - `getPathInfo()`, `loadHTML()`, `setExcerpt()` — internal helpers, not carried over.
 
 ## Behavior changes to be aware of
@@ -201,6 +201,6 @@ Debug messages are sent to the logger independently of the `debug` flag (which o
 ## New in 4.0
 
 - `Readerable::isProbablyReaderable($html)` — Mozilla's quick pre-check for whether a page is worth parsing, ported for the first time.
-- `parseDocument(\Dom\HTMLDocument $document)` — parse a document you've already created (note: it's modified in place).
+- `parse()` also accepts a `\Dom\HTMLDocument` you've already created, not just an HTML string (note: a passed document is modified in place).
 - `$article->textContent`, `->length`, `->lang`, `->publishedTime` outputs.
 - Metadata sources at Readability.js 0.6.0 parity: JSON-LD (`@graph`, `@context` objects), parsely, `article:author`, `itemprop`.

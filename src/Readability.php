@@ -115,31 +115,25 @@ final class Readability
     }
 
     /**
-     * Parse an HTML string and return the article.
+     * Parse HTML — a string, or an already-parsed document — and return the
+     * article. A passed document is consumed: it is modified in place while
+     * the article is extracted.
+     *
+     * Mirrors Readability.js parse().
      *
      * @throws ParseException when the input is empty, the document exceeds
      *                        maxElemsToParse, or no article content is found
      *                        (where Readability.js returns null)
      */
-    public function parse(string $html): Article
+    public function parse(\Dom\HTMLDocument|string $document): Article
     {
-        if (trim($html) === '') {
-            throw ParseException::emptyInput();
+        if (is_string($document)) {
+            if (trim($document) === '') {
+                throw ParseException::emptyInput();
+            }
+            $document = \Dom\HTMLDocument::createFromString($document, LIBXML_NOERROR);
         }
 
-        return $this->parseDocument(\Dom\HTMLDocument::createFromString($html, LIBXML_NOERROR));
-    }
-
-    /**
-     * Runs readability on an already-parsed document. The document is
-     * consumed: it is modified in place while the article is extracted.
-     *
-     * Mirrors Readability.js parse().
-     *
-     * @throws ParseException
-     */
-    public function parseDocument(\Dom\HTMLDocument $document): Article
-    {
         $this->doc = $document;
         $this->scores = new \SplObjectStorage();
         $this->dataTables = new \SplObjectStorage();
