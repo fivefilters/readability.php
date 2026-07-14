@@ -164,7 +164,34 @@ Readability scans and scores HTML elements based on the number of words, links a
 
 ## Security
 
+Readability is a content **extractor**, not a sanitizer. The returned
+`Article::$content` (and `Article::$contentElement`) is HTML pulled from the
+source page — it is *not* safe to render as-is when the input is untrusted.
+
 If you're going to use Readability with untrusted input (whether in HTML or DOM form), we **strongly** recommend you use a sanitizer library like [HTML Purifier](https://github.com/ezyang/htmlpurifier) or [Symfony's HtmlSanitizer](https://symfony.com/doc/current/html_sanitizer.html) to avoid script injection when you use the output of Readability. We would also recommend using [CSP](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) to add further defense-in-depth restrictions to what you allow the resulting content to do. The Firefox integration of reader mode uses both of these techniques itself. Sanitizing unsafe content out of the input is explicitly not something we aim to do as part of Readability itself - there are other good sanitizer libraries out there, use them!
+
+Readability removes `<script>`, `<style>` and `<noscript>` elements and
+neutralizes `<a href="javascript:...">` links (the latter now happens
+regardless of the `fixRelativeURLs` setting, as a defense-in-depth measure).
+This is **not** a substitute for a real sanitizer. In particular, the
+following can survive extraction and must be handled by your sanitizer:
+
+- Inline event-handler attributes (`onclick`, `onerror`, `onload`, …).
+- `data:` and other non-`http(s)` URIs on media — `src`/`srcset`/`poster` of
+  `img`/`source`/`video`/etc., including URLs promoted from lazy-loading
+  attributes such as `data-src`.
+- Embedded video players (`<iframe>`/`<embed>`/`<object>`) that are kept when
+  they match `allowedVideoRegex` — these are preserved with all their
+  attributes.
+
+Two operational notes for untrusted input:
+
+- Set `maxElemsToParse` (default `0`, meaning no limit) and cap the raw input
+  size yourself. The whole document is parsed into a DOM before that limit is
+  checked, so it bounds the extraction work rather than peak parse-time memory.
+- Treat `allowedVideoRegex` as trusted configuration. It is matched against
+  element markup from the (possibly attacker-controlled) document, so a
+  pathological pattern supplied here could cause catastrophic backtracking.
 
 ## Development and testing
 
