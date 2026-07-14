@@ -43,6 +43,8 @@ try {
 }
 ```
 
+When no article content can be found, `ParseException` still carries whatever was extracted before content detection failed — `$e->title`, `$e->byline`, `$e->dir`, `$e->lang`, `$e->excerpt`, `$e->siteName`, `$e->publishedTime` and `$e->image` (each `null` if not reached or not found). Readability.js discards these when it returns `null`; they're preserved here so you can still label a failed extraction with the document's metadata.
+
 `Article` is a readonly value object mirroring what Readability.js returns:
 
 ```php

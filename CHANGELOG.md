@@ -17,6 +17,7 @@ Ground-up port from the latest Readability.js (v0.6.0) using Claude's Fable mode
 - Test corpus replaced with Mozilla's 130 test pages verbatim; content comparison ports Mozilla's structural DOM comparison
 
 ### Added
+- `ParseException` preserves what was extracted before content detection failed (`title`, `byline`, `dir`, `lang`, `excerpt`, `siteName`, `publishedTime`, `image` as readonly properties), so callers can still use the document's metadata when no article content is found — Readability.js discards these when it returns null
 - Parity with Readability.js 0.6.0: `lang` and `publishedTime` output; `maxElemsToParse`, `classesToPreserve`, `allowedVideoRegex`, `linkDensityModifier` and `debug` options; aria-modal dialog removal; ad/loading-indicator stripping; parsely/`article:author`/`itemprop` metadata sources; JSON-LD `@graph`, `@context`-object and array handling; Unicode comma scoring; updated regexes (mathjax, bilibili, en/em-dash title separators)
 - `Readerable::isProbablyReaderable()`, a port of Readability-readerable.js
 - `parseDocument()` for callers who already hold a `Dom\HTMLDocument`

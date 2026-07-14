@@ -167,12 +167,29 @@ final class Readability
             $this->articleTitle = $metadata['title'];
 
             // PHP-specific: capture the lead image before grabArticle mutates
-            // the tree (the source meta/link tags live in <head>).
+            // the tree (the source meta/link tags live in <head>). Content
+            // <img> src attributes are made absolute by postProcessContent
+            // (when fixRelativeURLs is on); the lead image comes from <head>,
+            // so absolutize it the same way here.
             $leadImage = $this->getLeadImageUrl();
+            if ($leadImage !== null && $this->configuration->fixRelativeURLs && $this->baseURI !== null) {
+                $leadImage = $this->toAbsoluteURI($leadImage);
+            }
 
             $articleContent = $this->grabArticle();
             if (!$articleContent) {
-                throw ParseException::noContent();
+                // PHP-specific: preserve what was extracted before content
+                // detection failed (Readability.js discards it with its null return).
+                throw ParseException::noContent(
+                    title: self::pick($this->articleTitle),
+                    byline: self::pick($metadata['byline'], $this->articleByline),
+                    dir: $this->articleDir,
+                    lang: self::pick($this->articleLang),
+                    excerpt: self::pick($metadata['excerpt']),
+                    siteName: self::pick($metadata['siteName'], $this->articleSiteName),
+                    publishedTime: self::pick($metadata['publishedTime']),
+                    image: $leadImage,
+                );
             }
 
             $this->log('Grabbed: ' . $articleContent->innerHTML);
@@ -191,12 +208,6 @@ final class Readability
 
             $textContent = $articleContent->textContent;
 
-            // PHP-specific: content <img> src attributes were already made
-            // absolute by postProcessContent (when fixRelativeURLs is on); the
-            // lead image comes from <head>, so absolutize it the same way.
-            if ($leadImage !== null && $this->configuration->fixRelativeURLs && $this->baseURI !== null) {
-                $leadImage = $this->toAbsoluteURI($leadImage);
-            }
             $images = $this->collectImages($articleContent, $leadImage);
 
             return new Article(

@@ -95,6 +95,51 @@ class ReadabilityTest extends TestCase
         new Readability(new Configuration(maxElemsToParse: 1))->parse('<html><div>yo</div></html>');
     }
 
+    public function testNoContentExceptionPreservesExtractedMetadata(): void
+    {
+        // A document with rich metadata but no extractable content: the
+        // exception must carry what had been extracted before content
+        // detection failed (PHP-specific; Readability.js returns a bare null).
+        $html = <<<HTML
+        <html lang="fr"><head>
+        <title>Site Name - The Article Title</title>
+        <meta property="og:title" content="The Article Title" />
+        <meta property="og:site_name" content="Site Name" />
+        <meta property="og:description" content="A short description." />
+        <meta property="article:published_time" content="2026-01-02T03:04:05Z" />
+        <meta property="og:image" content="https://example.com/lead.jpg" />
+        <meta name="author" content="Jane Doe" />
+        </head><body></body></html>
+        HTML;
+
+        try {
+            new Readability()->parse($html);
+            $this->fail('Expected ParseException was not thrown.');
+        } catch (ParseException $e) {
+            $this->assertSame('Could not parse text.', $e->getMessage());
+            $this->assertSame('The Article Title', $e->title);
+            $this->assertSame('Jane Doe', $e->byline);
+            $this->assertSame('fr', $e->lang);
+            $this->assertSame('A short description.', $e->excerpt);
+            $this->assertSame('Site Name', $e->siteName);
+            $this->assertSame('2026-01-02T03:04:05Z', $e->publishedTime);
+            $this->assertSame('https://example.com/lead.jpg', $e->image);
+            $this->assertNull($e->dir);
+        }
+    }
+
+    public function testEmptyInputExceptionCarriesNoMetadata(): void
+    {
+        try {
+            new Readability()->parse('');
+            $this->fail('Expected ParseException was not thrown.');
+        } catch (ParseException $e) {
+            $this->assertNull($e->title);
+            $this->assertNull($e->byline);
+            $this->assertNull($e->image);
+        }
+    }
+
     public function testCustomAllowedVideoRegex(): void
     {
         $source = '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc mollis leo lacus, vitae semper nisl ullamcorper ut.</p>'
