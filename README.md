@@ -37,13 +37,18 @@ $html = file_get_contents('https://your.favorite.newspaper/article.html');
 
 try {
     $article = $readability->parse($html);
-    echo $article->content;
+    if ($article->hasContent()) {
+        echo $article->content;
+    } else {
+        // no article content found — title and metadata are still available
+        echo sprintf('No content found in "%s"', $article->title);
+    }
 } catch (ParseException $e) {
     echo sprintf('Error processing text: %s', $e->getMessage());
 }
 ```
 
-When no article content can be found, `ParseException` still carries whatever was extracted before content detection failed — `$e->title`, `$e->byline`, `$e->dir`, `$e->lang`, `$e->excerpt`, `$e->siteName`, `$e->publishedTime` and `$e->image` (each `null` if not reached or not found). Readability.js discards these when it returns `null`; they're preserved here so you can still label a failed extraction with the document's metadata.
+When no article content can be found — the case where Readability.js returns `null` — `parse()` still returns an `Article` carrying whatever was extracted before content detection failed (`title`, `byline`, `dir`, `lang`, `excerpt`, `siteName`, `publishedTime`, `image`), with the content-derived properties (`content`, `textContent`, `length`, `contentElement`) set to `null`. `Article::hasContent()` tells the two apart. `ParseException` is reserved for the cases where parsing cannot be attempted at all: empty input, or a document exceeding `maxElemsToParse` (where Readability.js throws too).
 
 `Article` is a readonly value object mirroring what Readability.js returns:
 

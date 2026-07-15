@@ -99,11 +99,13 @@ final class Readability
     }
 
     /**
-     * Parse an HTML string and return the article.
+     * Parse an HTML string and return the article. When no article content
+     * is found (where Readability.js returns null), the returned Article
+     * carries the extracted title and metadata with null content — see
+     * Article::hasContent().
      *
-     * @throws ParseException when the input is empty, the document exceeds
-     *                        maxElemsToParse, or no article content is found
-     *                        (where Readability.js returns null)
+     * @throws ParseException when the input is empty or the document exceeds
+     *                        maxElemsToParse
      */
     public function parse(string $html): Article
     {
@@ -178,17 +180,24 @@ final class Readability
 
             $articleContent = $this->grabArticle();
             if (!$articleContent) {
-                // PHP-specific: preserve what was extracted before content
-                // detection failed (Readability.js discards it with its null return).
-                throw ParseException::noContent(
-                    title: self::pick($this->articleTitle),
+                // PHP-specific: where Readability.js returns a bare null and
+                // discards the title and metadata it had already extracted,
+                // return a metadata-only Article (content fields are null;
+                // see Article::hasContent()).
+                return new Article(
+                    title: $this->articleTitle ?? '',
                     byline: self::pick($metadata['byline'], $this->articleByline),
                     dir: $this->articleDir,
                     lang: self::pick($this->articleLang),
+                    content: null,
+                    textContent: null,
+                    length: null,
                     excerpt: self::pick($metadata['excerpt']),
                     siteName: self::pick($metadata['siteName'], $this->articleSiteName),
                     publishedTime: self::pick($metadata['publishedTime']),
                     image: $leadImage,
+                    images: $leadImage !== null ? [$leadImage] : [],
+                    contentElement: null,
                 );
             }
 

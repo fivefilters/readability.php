@@ -7,7 +7,7 @@ Ground-up port from the latest Readability.js (v0.6.0) using Claude's Fable mode
 
 ### Changed
 - Requires PHP >= 8.4; parsing and serialization use `Dom\HTMLDocument` (the WHATWG-spec Lexbor parser bundled with PHP), replacing HTML5-PHP and the legacy libxml path
-- `parse()` now returns a readonly `Article` value object (`title`, `content`, `textContent`, `length`, `excerpt`, `byline`, `siteName`, `dir`, `lang`, `publishedTime`, `image`, `images`, `contentElement`) and throws `ParseException` when no article is found
+- `parse()` now returns a readonly `Article` value object (`title`, `content`, `textContent`, `length`, `excerpt`, `byline`, `siteName`, `dir`, `lang`, `publishedTime`, `image`, `images`, `contentElement`). When no article content is found (where Readability.js returns null), the `Article` still carries the extracted title and metadata with null content — check `Article::hasContent()`. `ParseException` is thrown only for empty input or documents over `maxElemsToParse`
 - `Configuration` is a readonly object with named constructor arguments; `maxTopCandidates` renamed to `nbTopCandidates` (matching Readability.js)
 - Article output is wrapped in `<div id="readability-page-1" class="page">`, as in Readability.js
 - Byline is always extracted into `Article::$byline`; the `articleByline` option becomes `keepInlineByline`, which only controls whether an inline byline stays in the content (default removes it, as in Readability.js)
@@ -17,7 +17,6 @@ Ground-up port from the latest Readability.js (v0.6.0) using Claude's Fable mode
 - Test corpus replaced with Mozilla's 130 test pages verbatim; content comparison ports Mozilla's structural DOM comparison
 
 ### Added
-- `ParseException` preserves what was extracted before content detection failed (`title`, `byline`, `dir`, `lang`, `excerpt`, `siteName`, `publishedTime`, `image` as readonly properties), so callers can still use the document's metadata when no article content is found — Readability.js discards these when it returns null
 - Parity with Readability.js 0.6.0: `lang` and `publishedTime` output; `maxElemsToParse`, `classesToPreserve`, `allowedVideoRegex`, `linkDensityModifier` and `debug` options; aria-modal dialog removal; ad/loading-indicator stripping; parsely/`article:author`/`itemprop` metadata sources; JSON-LD `@graph`, `@context`-object and array handling; Unicode comma scoring; updated regexes (mathjax, bilibili, en/em-dash title separators)
 - `Readerable::isProbablyReaderable()`, a port of Readability-readerable.js
 - `parseDocument()` for callers who already hold a `Dom\HTMLDocument`

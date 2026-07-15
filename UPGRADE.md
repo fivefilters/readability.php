@@ -180,7 +180,7 @@ Debug messages are sent to the logger independently of the `debug` flag (which o
 
 ## Behavior changes to be aware of
 
-- **`parse()` never returns `false`/`bool`.** It returns an `Article` or throws `ParseException` — including for empty input, documents over `maxElemsToParse`, and pages where no article could be found (all cases where Readability.js returns `null`).
+- **`parse()` never returns `false`/`bool`.** It always returns an `Article`. When no article content is found (where Readability.js returns `null` and 3.x returned `false`), the `Article` still carries the extracted title and metadata, with `content`/`textContent`/`length`/`contentElement` set to `null` — check `Article::hasContent()`. `ParseException` is thrown only for empty input or documents over `maxElemsToParse`.
 - **The content is wrapped** in `<div id="readability-page-1" class="page">…</div>`, exactly as Readability.js outputs. 3.x serialized the extracted elements with no wrapper around them. If you post-process the HTML, account for the wrapper — or reproduce the unwrapped 3.x output with:
 
   ```php
