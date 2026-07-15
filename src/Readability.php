@@ -207,7 +207,7 @@ final class Readability
                 );
             }
 
-            $this->log('Grabbed: ' . $articleContent->innerHTML);
+            $this->log('Grabbed:', fn (): string => $articleContent->innerHTML);
 
             $this->postProcessContent($articleContent);
 
@@ -2566,6 +2566,12 @@ final class Readability
             return;
         }
         $format = function (mixed $arg): string {
+            // Closures defer expensive serialization (e.g. a large innerHTML)
+            // until here, past the enabled check above, so nothing is built
+            // when logging is off.
+            if ($arg instanceof \Closure) {
+                $arg = $arg();
+            }
             if ($arg instanceof \Dom\Element) {
                 $attrPairs = [];
                 foreach ($arg->attributes as $attr) {
