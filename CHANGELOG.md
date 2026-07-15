@@ -27,6 +27,7 @@ Ground-up port from the latest Readability.js (v0.6.0) using Claude's Fable mode
 - HTML5-PHP dependency; `ext-xml` requirement
 - Options that existed as libxml workarounds: `parser`, `substituteEntities`, `normalizeEntities`, `summonCthulhu`
 - The custom DOM subclass layer (`src/Nodes/`) and its workarounds (attribute-based state, shifting-aware iteration)
+- The Docker-based local test setup (`docker-compose.yml`, `Makefile`, `docker/`); tests and static analysis run directly on PHP 8.4/8.5, locally and in CI
 
 ## [v3.3.3](https://github.com/fivefilters/readability.php/releases/tag/v3.3.3)
 - Fix type error - extends type support to add DOMProcessingInstruction in more method signatures (reported by @reinierkors)

@@ -219,11 +219,7 @@ composer install --prefer-source
 ./vendor/bin/phpunit
 ```
 
-To test against multiple PHP versions with Docker:
-
-```bash
-make test-all   # or make test-8.4 / make test-8.5
-```
+CI runs the suite (plus [Psalm](https://psalm.dev/) static analysis) on PHP 8.4 and 8.5.
 
 ### Updating the expected test output
 
