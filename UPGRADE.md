@@ -11,8 +11,10 @@ Version 4.0 is a ground-up rewrite on PHP's native DOM extension (the Lexbor HTM
 | HTML parser | libxml or HTML5-PHP | native (Lexbor) |
 
 ```bash
-composer require "fivefilters/readability.php:^4.0"
+composer require "fivefilters/readability.php:^4.0@beta"
 ```
+
+(The `@beta` stability flag is needed while 4.0 is in beta; drop it once the stable release is out.)
 
 ## The one-minute version
 
@@ -33,7 +35,7 @@ try {
 **4.0** — `parse()` returns a readonly `Article` value object (or throws):
 
 ```php
-$readability = new Readability(new Configuration());
+$readability = new Readability(); // options are named constructor arguments now, all optional
 
 try {
     $article = $readability->parse($html);
@@ -79,7 +81,7 @@ $firstParagraph = $element->querySelector('p'); // CSS selectors work natively
 
 ## Configuration
 
-3.x used an options array (or fluent setters). 4.0 uses a readonly object with named constructor arguments:
+3.x required a `Configuration` built from an options array (or fluent setters). In 4.0, options are named arguments passed directly to `Readability` (like the options object in Readability.js), and they're all optional — `new Readability()` uses the defaults:
 
 ```php
 // 3.x
@@ -88,14 +90,16 @@ $configuration = new Configuration([
     'originalURL' => 'https://example.com/article.html',
 ]);
 // or: $configuration->setFixRelativeURLs(true)->setOriginalURL('...');
+$readability = new Readability($configuration);
 
 // 4.0
-$configuration = new Configuration(
+$readability = new Readability(
     fixRelativeURLs: true,
     originalURL: 'https://example.com/article.html',
 );
-// or: Configuration::fromArray(['fixRelativeURLs' => true, 'originalURL' => '...'])
 ```
+
+A readonly `Configuration` object still exists, taking the same named arguments, for options built up separately or shared between instances: `new Readability(new Configuration(fixRelativeURLs: true))`. To build one from an options array, use `Configuration::fromArray(['fixRelativeURLs' => true])`.
 
 Option mapping:
 
@@ -155,7 +159,7 @@ In 3.x, `articleByline` (default `false`) both enabled byline *detection* and, w
 
 ```php
 // Restore the 3.x default (byline stays in the content):
-$configuration = new Configuration(keepInlineByline: true);
+$readability = new Readability(keepInlineByline: true);
 ```
 
 ### PSR-3 logging
@@ -167,7 +171,7 @@ Still supported. Pass a PSR-3 `LoggerInterface` as the `logger` option instead o
 $configuration->setLogger($myLogger);
 
 // 4.0
-$configuration = new Configuration(logger: $myLogger);
+$readability = new Readability(logger: $myLogger);
 ```
 
 Debug messages are sent to the logger independently of the `debug` flag (which only controls `error_log()` output).
@@ -175,7 +179,7 @@ Debug messages are sent to the logger independently of the `debug` flag (which o
 ## Removed features
 
 - `parser`, `substituteEntities`, `normalizeEntities`, `summonCthulhu` — all were libxml/HTML5-PHP workarounds and have no equivalent (the native Lexbor parser doesn't have the bugs they patched).
-- `getDOMDocument(false)` — the whole-document variant is gone; `$article->contentElement` gives the extracted content only. If you need the full page, parse it yourself with `\Dom\HTMLDocument::createFromString()` and pass it to `parseDocument()`.
+- `getDOMDocument(false)` — the whole-document variant is gone; `$article->contentElement` gives the extracted content only. If you need the full page, parse it yourself with `\Dom\HTMLDocument::createFromString()` and pass the document to `parse()`.
 - `getPathInfo()`, `loadHTML()`, `setExcerpt()` — internal helpers, not carried over.
 
 ## Behavior changes to be aware of
@@ -197,6 +201,6 @@ Debug messages are sent to the logger independently of the `debug` flag (which o
 ## New in 4.0
 
 - `Readerable::isProbablyReaderable($html)` — Mozilla's quick pre-check for whether a page is worth parsing, ported for the first time.
-- `parseDocument(\Dom\HTMLDocument $document)` — parse a document you've already created (note: it's modified in place).
+- `parse()` also accepts a `\Dom\HTMLDocument` you've already created, not just an HTML string (note: a passed document is modified in place).
 - `$article->textContent`, `->length`, `->lang`, `->publishedTime` outputs.
 - Metadata sources at Readability.js 0.6.0 parity: JSON-LD (`@graph`, `@context` objects), parsely, `article:author`, `itemprop`.

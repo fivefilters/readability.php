@@ -11,7 +11,6 @@ declare(strict_types=1);
 require __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../DomCompare.php';
 
-use fivefilters\Readability\Configuration;
 use fivefilters\Readability\Readability;
 use fivefilters\Readability\Test\DomCompare;
 
@@ -42,11 +41,11 @@ foreach (scandir($root) as $dir) {
     try {
         $document = \Dom\HTMLDocument::createFromString($source, LIBXML_NOERROR, 'UTF-8');
         removeCommentNodesRecursively($document);
-        $article = new Readability(new Configuration(
+        $article = new Readability(
             classesToPreserve: ['caption'],
             fixRelativeURLs: true,
             originalURL: 'http://fakehost/test/page.html',
-        ))->parseDocument($document);
+        )->parse($document);
     } catch (\Throwable $e) {
         $article = null;
         $phpError = $e->getMessage();

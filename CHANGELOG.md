@@ -1,14 +1,14 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [v4.0.0](https://github.com/fivefilters/readability.php/releases/tag/v4.0.0)
+## [v4.0.0-beta.1](https://github.com/fivefilters/readability.php/releases/tag/v4.0.0-beta.1)
 
 Ground-up port from the latest Readability.js (v0.6.0) using Claude's Fable model. Uses PHP 8.4's new DOM API and native parser. See [UPGRADE.md](UPGRADE.md) for the full 3.x → 4.0 migration guide.
 
 ### Changed
 - Requires PHP >= 8.4; parsing and serialization use `Dom\HTMLDocument` (the WHATWG-spec Lexbor parser bundled with PHP), replacing HTML5-PHP and the legacy libxml path
 - `parse()` now returns a readonly `Article` value object (`title`, `content`, `textContent`, `length`, `excerpt`, `byline`, `siteName`, `dir`, `lang`, `publishedTime`, `image`, `images`, `contentElement`). When no article content is found (where Readability.js returns null), the `Article` still carries the extracted title and metadata with null content — check `Article::hasContent()`. `ParseException` is thrown only for empty input or documents over `maxElemsToParse`
-- `Configuration` is a readonly object with named constructor arguments; `maxTopCandidates` renamed to `nbTopCandidates` (matching Readability.js)
+- Options are passed directly to the `Readability` constructor as named arguments, like the options object in Readability.js (`new Readability(fixRelativeURLs: true)`), and are all optional; a readonly `Configuration` object taking the same named arguments can be passed instead. `maxTopCandidates` renamed to `nbTopCandidates` (matching Readability.js)
 - Article output is wrapped in `<div id="readability-page-1" class="page">`, as in Readability.js
 - Byline is always extracted into `Article::$byline`; the `articleByline` option becomes `keepInlineByline`, which only controls whether an inline byline stays in the content (default removes it, as in Readability.js)
 - Image extraction moved onto the result object: `getImage()`/`getImages()` become `$article->image` / `$article->images`
@@ -19,7 +19,7 @@ Ground-up port from the latest Readability.js (v0.6.0) using Claude's Fable mode
 ### Added
 - Parity with Readability.js 0.6.0: `lang` and `publishedTime` output; `maxElemsToParse`, `classesToPreserve`, `allowedVideoRegex`, `linkDensityModifier` and `debug` options; aria-modal dialog removal; ad/loading-indicator stripping; parsely/`article:author`/`itemprop` metadata sources; JSON-LD `@graph`, `@context`-object and array handling; Unicode comma scoring; updated regexes (mathjax, bilibili, en/em-dash title separators)
 - `Readerable::isProbablyReaderable()`, a port of Readability-readerable.js
-- `parseDocument()` for callers who already hold a `Dom\HTMLDocument`
+- `parse()` accepts an already-parsed `Dom\HTMLDocument` as well as an HTML string
 - Cross-check harness (`test/tools/`) that diffs this port's output against Readability.js over the whole corpus
 - Static analysis with [Psalm](https://psalm.dev/) (`composer analyse`), run in CI alongside the test suite
 

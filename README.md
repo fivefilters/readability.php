@@ -20,7 +20,9 @@ PHP 8.4+, ext-dom, and ext-mbstring.
 
 First require the library using composer:
 
-`composer require "fivefilters/readability.php:>=4.0"`
+`composer require "fivefilters/readability.php:^4.0@beta"`
+
+Version 4.0 is currently in beta, so the `@beta` stability flag is needed; once the stable release is out, `composer require "fivefilters/readability.php:^4.0"` will do.
 
 Then create a Readability instance and feed `parse()` your HTML. It returns an `Article` object:
 
@@ -28,10 +30,9 @@ Then create a Readability instance and feed `parse()` your HTML. It returns an `
 <?php
 require __DIR__ . '/vendor/autoload.php';
 use fivefilters\Readability\Readability;
-use fivefilters\Readability\Configuration;
 use fivefilters\Readability\ParseException;
 
-$readability = new Readability(new Configuration());
+$readability = new Readability();
 
 $html = file_get_contents('https://your.favorite.newspaper/article.html');
 
@@ -87,7 +88,7 @@ foreach ($article->contentElement->querySelectorAll('img[src]') as $img) {
 }
 ```
 
-If you already have a `\Dom\HTMLDocument` (for example because you want to pre-process it), use `parseDocument()` instead of `parse()`. Note that the document is modified in place while the article is extracted.
+`parse()` also accepts a `\Dom\HTMLDocument` directly (for example because you want to pre-process it). Note that a passed document is modified in place while the article is extracted.
 
 ### Checking if a page is readerable
 
@@ -98,7 +99,7 @@ use fivefilters\Readability\Readerable;
 
 // Only run the full parse if we suspect it will produce a meaningful result.
 if (Readerable::isProbablyReaderable($html)) {
-    $article = new Readability(new Configuration())->parse($html);
+    $article = new Readability()->parse($html);
 }
 ```
 
@@ -114,13 +115,22 @@ Readerable::isProbablyReaderable($html, minScore: 0, minContentLength: 120);
 
 ## Options
 
-Configuration is a readonly object; pass options as named constructor arguments (or as an array via `Configuration::fromArray()`):
+All options have defaults, so `new Readability()` is all you need for the standard behavior. To change something, pass options as named arguments — the equivalent of the options object in Readability.js:
 
 ```php
-$configuration = new Configuration(
+$readability = new Readability(
     fixRelativeURLs: true,
     originalURL: 'https://my.newspaper.url/article/something-interesting-to-read.html',
 );
+```
+
+If you want to build the options up separately, or share them between instances, you can also pass a `Configuration` — a readonly object taking the same named arguments (or an array via `Configuration::fromArray()`):
+
+```php
+use fivefilters\Readability\Configuration;
+
+$configuration = new Configuration(fixRelativeURLs: true, originalURL: 'https://...');
+$readability = new Readability($configuration);
 ```
 
 Options matching Readability.js (same defaults):

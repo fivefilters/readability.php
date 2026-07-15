@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace fivefilters\Readability\Test;
 
-use fivefilters\Readability\Configuration;
 use fivefilters\Readability\Readability;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -18,12 +17,12 @@ class ReadabilityUnitTest extends TestCase
 {
     private static function invoke(string $method, mixed ...$args): mixed
     {
-        $readability = new Readability(new Configuration(
+        $readability = new Readability(
             fixRelativeURLs: true,
             originalURL: 'http://fakehost/test/page.html',
-        ));
+        );
         $reflection = new \ReflectionClass($readability);
-        // toAbsoluteURI reads the base URI resolved by parseDocument; set it directly.
+        // toAbsoluteURI reads the base URI resolved by parse(); set it directly.
         foreach (['baseURI' => 'http://fakehost/test/page.html', 'documentURI' => 'http://fakehost/test/page.html'] as $property => $value) {
             $reflection->getProperty($property)->setValue($readability, $value);
         }
@@ -155,7 +154,7 @@ class ReadabilityUnitTest extends TestCase
             . '</p></article></body></html>';
 
         // Default configuration: fixRelativeURLs is false.
-        $article = new Readability(new Configuration())->parse($html);
+        $article = new Readability()->parse($html);
 
         $this->assertStringNotContainsString('javascript:', $article->content);
         // The link text is preserved (converted to a text node / span).
