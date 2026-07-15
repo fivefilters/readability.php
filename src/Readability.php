@@ -115,15 +115,13 @@ final class Readability
     }
 
     /**
-     * Parse HTML — a string, or an already-parsed document — and return the
-     * article. A passed document is consumed: it is modified in place while
-     * the article is extracted.
+     * Parse an HTML string and return the article. When no article content
+     * is found (where Readability.js returns null), the returned Article
+     * carries the extracted title and metadata with null content — see
+     * Article::hasContent().
      *
-     * Mirrors Readability.js parse().
-     *
-     * @throws ParseException when the input is empty, the document exceeds
-     *                        maxElemsToParse, or no article content is found
-     *                        (where Readability.js returns null)
+     * @throws ParseException when the input is empty or the document exceeds
+     *                        maxElemsToParse
      */
     public function parse(\Dom\HTMLDocument|string $document): Article
     {
@@ -177,12 +175,36 @@ final class Readability
             $this->articleTitle = $metadata['title'];
 
             // PHP-specific: capture the lead image before grabArticle mutates
-            // the tree (the source meta/link tags live in <head>).
+            // the tree (the source meta/link tags live in <head>). Content
+            // <img> src attributes are made absolute by postProcessContent
+            // (when fixRelativeURLs is on); the lead image comes from <head>,
+            // so absolutize it the same way here.
             $leadImage = $this->getLeadImageUrl();
+            if ($leadImage !== null && $this->configuration->fixRelativeURLs && $this->baseURI !== null) {
+                $leadImage = $this->toAbsoluteURI($leadImage);
+            }
 
             $articleContent = $this->grabArticle();
             if (!$articleContent) {
-                throw ParseException::noContent();
+                // PHP-specific: where Readability.js returns a bare null and
+                // discards the title and metadata it had already extracted,
+                // return a metadata-only Article (content fields are null;
+                // see Article::hasContent()).
+                return new Article(
+                    title: $this->articleTitle ?? '',
+                    byline: self::pick($metadata['byline'], $this->articleByline),
+                    dir: $this->articleDir,
+                    lang: self::pick($this->articleLang),
+                    content: null,
+                    textContent: null,
+                    length: null,
+                    excerpt: self::pick($metadata['excerpt']),
+                    siteName: self::pick($metadata['siteName'], $this->articleSiteName),
+                    publishedTime: self::pick($metadata['publishedTime']),
+                    image: $leadImage,
+                    images: $leadImage !== null ? [$leadImage] : [],
+                    contentElement: null,
+                );
             }
 
             $this->log('Grabbed: ' . $articleContent->innerHTML);
@@ -201,12 +223,6 @@ final class Readability
 
             $textContent = $articleContent->textContent;
 
-            // PHP-specific: content <img> src attributes were already made
-            // absolute by postProcessContent (when fixRelativeURLs is on); the
-            // lead image comes from <head>, so absolutize it the same way.
-            if ($leadImage !== null && $this->configuration->fixRelativeURLs && $this->baseURI !== null) {
-                $leadImage = $this->toAbsoluteURI($leadImage);
-            }
             $images = $this->collectImages($articleContent, $leadImage);
 
             return new Article(

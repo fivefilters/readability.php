@@ -7,7 +7,7 @@ Ground-up port from the latest Readability.js (v0.6.0) using Claude's Fable mode
 
 ### Changed
 - Requires PHP >= 8.4; parsing and serialization use `Dom\HTMLDocument` (the WHATWG-spec Lexbor parser bundled with PHP), replacing HTML5-PHP and the legacy libxml path
-- `parse()` now returns a readonly `Article` value object (`title`, `content`, `textContent`, `length`, `excerpt`, `byline`, `siteName`, `dir`, `lang`, `publishedTime`, `image`, `images`, `contentElement`) and throws `ParseException` when no article is found
+- `parse()` now returns a readonly `Article` value object (`title`, `content`, `textContent`, `length`, `excerpt`, `byline`, `siteName`, `dir`, `lang`, `publishedTime`, `image`, `images`, `contentElement`). When no article content is found (where Readability.js returns null), the `Article` still carries the extracted title and metadata with null content — check `Article::hasContent()`. `ParseException` is thrown only for empty input or documents over `maxElemsToParse`
 - Options are passed directly to the `Readability` constructor as named arguments, like the options object in Readability.js (`new Readability(fixRelativeURLs: true)`), and are all optional; a readonly `Configuration` object taking the same named arguments can be passed instead. `maxTopCandidates` renamed to `nbTopCandidates` (matching Readability.js)
 - Article output is wrapped in `<div id="readability-page-1" class="page">`, as in Readability.js
 - Byline is always extracted into `Article::$byline`; the `articleByline` option becomes `keepInlineByline`, which only controls whether an inline byline stays in the content (default removes it, as in Readability.js)

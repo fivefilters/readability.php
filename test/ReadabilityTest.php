@@ -95,6 +95,55 @@ class ReadabilityTest extends TestCase
         new Readability(maxElemsToParse: 1)->parse('<html><div>yo</div></html>');
     }
 
+    public function testNoContentReturnsMetadataOnlyArticle(): void
+    {
+        // A document with rich metadata but no extractable content: parse()
+        // must return an Article carrying what had been extracted before
+        // content detection failed, with the content-derived properties null
+        // (PHP-specific; Readability.js returns a bare null).
+        $html = <<<HTML
+        <html lang="fr"><head>
+        <title>Site Name - The Article Title</title>
+        <meta property="og:title" content="The Article Title" />
+        <meta property="og:site_name" content="Site Name" />
+        <meta property="og:description" content="A short description." />
+        <meta property="article:published_time" content="2026-01-02T03:04:05Z" />
+        <meta property="og:image" content="https://example.com/lead.jpg" />
+        <meta name="author" content="Jane Doe" />
+        </head><body></body></html>
+        HTML;
+
+        $article = new Readability()->parse($html);
+
+        $this->assertFalse($article->hasContent());
+        $this->assertNull($article->content);
+        $this->assertNull($article->textContent);
+        $this->assertNull($article->length);
+        $this->assertNull($article->contentElement);
+        $this->assertSame('', (string) $article);
+
+        $this->assertSame('The Article Title', $article->title);
+        $this->assertSame('Jane Doe', $article->byline);
+        $this->assertSame('fr', $article->lang);
+        $this->assertSame('A short description.', $article->excerpt);
+        $this->assertSame('Site Name', $article->siteName);
+        $this->assertSame('2026-01-02T03:04:05Z', $article->publishedTime);
+        $this->assertSame('https://example.com/lead.jpg', $article->image);
+        $this->assertSame(['https://example.com/lead.jpg'], $article->images);
+        $this->assertNull($article->dir);
+    }
+
+    public function testArticleWithContentReportsHasContent(): void
+    {
+        $article = new Readability()->parse(
+            '<html><body><article><p>' . str_repeat('Long enough paragraph text. ', 30) . '</p></article></body></html>'
+        );
+
+        $this->assertTrue($article->hasContent());
+        $this->assertNotNull($article->contentElement);
+        $this->assertGreaterThan(0, $article->length);
+    }
+
     public function testCustomAllowedVideoRegex(): void
     {
         $source = '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc mollis leo lacus, vitae semper nisl ullamcorper ut.</p>'
