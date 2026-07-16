@@ -1,8 +1,10 @@
 {
-    "Author": "Daniel Kahn Gillmor",
-    "Direction": null,
-    "Excerpt": "Facebook collects data about people who have never even opted in. But there are ways these non-users can protect themselves.",
-    "Image": "https:\/\/www.aclu.org\/sites\/default\/files\/styles\/metatag_og_image_1200x630\/public\/field_share_image\/web18-facebook-socialshare-1200x628-v02.png?itok=p77cQjOm",
-    "Title": "Facebook Is Tracking Me Even Though I\u2019m Not on Facebook",
-    "SiteName": "American Civil Liberties Union"
+  "title": "Facebook Is Tracking Me Even Though I’m Not on Facebook",
+  "byline": "Daniel Kahn Gillmor",
+  "dir": "ltr",
+  "lang": "en",
+  "excerpt": "Facebook collects data about people who have never even opted in. But there are ways these non-users can protect themselves.",
+  "siteName": "American Civil Liberties Union",
+  "publishedTime": "2018-04-05T06:00",
+  "readerable": true
 }

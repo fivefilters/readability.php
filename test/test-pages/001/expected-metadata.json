@@ -1,8 +1,10 @@
 {
-    "Author": "Nicolas Perriault —",
-    "Direction": null,
-    "Excerpt": "Nicolas Perriault's homepage.",
-    "Image": null,
-    "Title": "Get your Frontend JavaScript Code Covered | Code",
-    "SiteName": null
+  "title": "Get your Frontend JavaScript Code Covered | Code",
+  "byline": "Nicolas Perriault",
+  "dir": null,
+  "lang": "en",
+  "excerpt": "Nicolas Perriault's homepage.",
+  "siteName": null,
+  "publishedTime": null,
+  "readerable": true
 }

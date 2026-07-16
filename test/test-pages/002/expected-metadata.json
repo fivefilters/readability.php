@@ -1,8 +1,10 @@
 {
-    "Author": "Nikhil Marathe",
-    "Direction": null,
-    "Excerpt": "For more than a decade the Web has used XMLHttpRequest (XHR) to achieve asynchronous requests in JavaScript. While very useful, XHR is not a very ...",
-    "Image": null,
-    "Title": "This API is so Fetching!",
-    "SiteName": "Mozilla Hacks – the Web developer blog"
+  "title": "This API is so Fetching!",
+  "byline": "Nikhil Marathe",
+  "dir": null,
+  "lang": "en-US",
+  "excerpt": "For more than a decade the Web has used XMLHttpRequest (XHR) to achieve asynchronous requests in JavaScript. While very useful, XHR is not a very ...",
+  "siteName": "Mozilla Hacks – the Web developer blog",
+  "publishedTime": null,
+  "readerable": true
 }

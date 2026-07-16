@@ -1,92 +1,51 @@
 <?php
 
+declare(strict_types=1);
+
 namespace fivefilters\Readability\Test;
 
-use PHPUnit\Framework\Attributes\DataProvider;
 use fivefilters\Readability\Configuration;
-use Monolog\Handler\NullHandler;
-use Monolog\Logger;
+use PHPUnit\Framework\TestCase;
 
-/**
- * Class ConfigurationTest.
- */
-class ConfigurationTest extends \PHPUnit\Framework\TestCase
+class ConfigurationTest extends TestCase
 {
-    /**
-     * Test constructor sets parameters
-     */
-    #[DataProvider('getParams')]
-    public function testConfigurationConstructorSetsParameters(array $params): void
-    {
-        $config = new Configuration($params);
-        $this->doEqualsAsserts($config, $params);
-    }
-
-    /**
-     * Test invalid parameter is not in config
-     */
-    #[DataProvider('getParams')]
-    public function testInvalidParameterIsNotInConfig(array $params): void
-    {
-        $config = new Configuration($params);
-        $this->assertArrayNotHasKey('invalidParameter', $config->toArray(), 'Invalid param key is not present in config');
-    }
-
-    /**
-     * Check if the config getters are correct
-     */
-    private function doEqualsAsserts(Configuration $config, array $options): void
-    {
-        $this->assertEquals($options['maxTopCandidates'], $config->getMaxTopCandidates());
-        $this->assertEquals($options['charThreshold'], $config->getCharThreshold());
-        $this->assertEquals($options['articleByline'], $config->getArticleByline());
-        $this->assertEquals($options['stripUnlikelyCandidates'], $config->getStripUnlikelyCandidates());
-        $this->assertEquals($options['cleanConditionally'], $config->getCleanConditionally());
-        $this->assertEquals($options['weightClasses'], $config->getWeightClasses());
-        $this->assertEquals($options['keepClasses'], $config->getKeepClasses());
-        $this->assertEquals($options['fixRelativeURLs'], $config->getFixRelativeURLs());
-        $this->assertEquals($options['substituteEntities'], $config->getSubstituteEntities());
-        $this->assertEquals($options['normalizeEntities'], $config->getNormalizeEntities());
-        $this->assertEquals($options['originalURL'], $config->getOriginalURL());
-        $this->assertEquals($options['summonCthulhu'], $config->getSummonCthulhu());
-    }
-
-    /**
-     * Data provider
-     */
-    public static function getParams(): array
-    {
-        return [[
-            'params' => [
-                'maxTopCandidates' => 3,
-                'wordThreshold' => 500,
-                'charThreshold' => 500,
-                'articleByline' => true,
-                'stripUnlikelyCandidates' => false,
-                'cleanConditionally' => false,
-                'weightClasses' => false,
-                'fixRelativeURLs' => true,
-                'substituteEntities' => true,
-                'normalizeEntities' => true,
-                'originalURL' => 'my.original.url',
-                'summonCthulhu' => false,
-                'keepClasses' => false,
-                'invalidParameter' => 'invalidParameterValue'
-            ]
-        ]];
-    }
-
-    /**
-     * Test if a logger interface can be injected and retrieved from the Configuration object.
-     */
-    public function testLoggerCanBeInjected(): void
+    /** Defaults must match Readability.js 0.6.0 option defaults. */
+    public function testDefaults(): void
     {
         $configuration = new Configuration();
-        $log = new Logger('Readability');
-        $log->pushHandler(new NullHandler());
+        $this->assertFalse($configuration->debug);
+        $this->assertSame(0, $configuration->maxElemsToParse);
+        $this->assertSame(5, $configuration->nbTopCandidates);
+        $this->assertSame(500, $configuration->charThreshold);
+        $this->assertSame([], $configuration->classesToPreserve);
+        $this->assertFalse($configuration->keepClasses);
+        $this->assertFalse($configuration->disableJSONLD);
+        $this->assertNull($configuration->allowedVideoRegex);
+        $this->assertSame(0.0, $configuration->linkDensityModifier);
+        $this->assertFalse($configuration->fixRelativeURLs);
+        $this->assertNull($configuration->originalURL);
+        $this->assertTrue($configuration->stripUnlikelyCandidates);
+        $this->assertTrue($configuration->weightClasses);
+        $this->assertTrue($configuration->cleanConditionally);
+    }
 
-        $configuration->setLogger($log);
+    public function testFromArray(): void
+    {
+        $configuration = Configuration::fromArray([
+            'charThreshold' => 250,
+            'fixRelativeURLs' => true,
+            'originalURL' => 'https://example.com/article',
+        ]);
+        $this->assertSame(250, $configuration->charThreshold);
+        $this->assertTrue($configuration->fixRelativeURLs);
+        $this->assertSame('https://example.com/article', $configuration->originalURL);
+        // Untouched options keep their defaults.
+        $this->assertSame(5, $configuration->nbTopCandidates);
+    }
 
-        $this->assertSame($log, $configuration->getLogger());
+    public function testFromArrayRejectsUnknownOptions(): void
+    {
+        $this->expectException(\Error::class);
+        Configuration::fromArray(['noSuchOption' => true]);
     }
 }

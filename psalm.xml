@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="3"
+    strictBinaryOperands="false"
+    findUnusedCode="false"
+    findUnusedBaselineEntry="true"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+>
+    <projectFiles>
+        <directory name="src"/>
+        <ignoreFiles>
+            <directory name="vendor"/>
+        </ignoreFiles>
+    </projectFiles>
+    <stubs>
+        <!-- PHP 8.5's native URI extension, unknown to Psalm when analysis runs on PHP 8.4. -->
+        <file name="stubs/uri.phpstub"/>
+    </stubs>
+</psalm>

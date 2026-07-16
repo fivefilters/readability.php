@@ -1,8 +1,9 @@
 {
-    "Author": "Alissa Wilkinson",
-    "Direction": null,
-    "Excerpt": "It was an extraordinary year for movies.",
-    "Image": "https:\/\/cdn.vox-cdn.com\/thumbor\/7WyjCLC7n6i1IG2eJB06qi1o7kQ=\/0x148:2300x1352\/fit-in\/1200x630\/cdn.vox-cdn.com\/uploads\/chorus_asset\/file\/9871033\/Movies_end_of_year_2017.jpg",
-    "Title": "How to watch the 21 best films of 2017",
-    "SiteName": "Vox"
+  "title": "How to watch the 21 best films of 2017",
+  "byline": "Alissa Wilkinson",
+  "dir": null,
+  "excerpt": "It was an extraordinary year for movies.",
+  "siteName": "Vox",
+  "publishedTime": "2017-12-15T08:50:02-05:00",
+  "readerable": true
 }

@@ -1,8 +1,9 @@
 {
-    "Author": "Jong, Michiel de",
-    "Direction": null,
-    "Excerpt": null,
-    "Image": null,
-    "Title": "remoteStorage",
-    "SiteName": null
+  "title": "remoteStorage",
+  "byline": "Jong, Michiel de",
+  "dir": null,
+  "lang": "en",
+  "siteName": null,
+  "publishedTime": null,
+  "readerable": true
 }

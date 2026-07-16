@@ -1,8 +1,10 @@
 {
-    "Author": "By\n\t\t\tScott Cunningham",
-    "Direction": null,
-    "Excerpt": "We messed up. As technologists, tasked with delivering content and services to users, we lost track of the user experience. Twenty years ago we saw an explosion of websites, built by developers around the world, providing all forms of content. This was the beginning of an age of enlightenment, the intersection of content and technology. … Continued",
-    "Image": "http:\/\/www.iab.com\/wp-content\/uploads\/2015\/10\/getting-lean-with-digital-ad-ux-300x250.jpg",
-    "Title": "Getting LEAN with Digital Ad UX | IAB",
-    "SiteName": "IAB"
+  "title": "Getting LEAN with Digital Ad UX | IAB",
+  "byline": "By\n\t\t\tScott Cunningham",
+  "dir": null,
+  "lang": "en-US",
+  "excerpt": "We messed up. As technologists, tasked with delivering content and services to users, we lost track of the user experience. Twenty years ago we saw an explosion of websites, built by developers around the world, providing all forms of content. This was the beginning of an age of enlightenment, the intersection of content and technology. … Continued",
+  "siteName": "IAB",
+  "publishedTime": "2015-10-15T08:00:26+00:00",
+  "readerable": true
 }

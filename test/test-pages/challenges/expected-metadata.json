@@ -1,8 +1,8 @@
 {
-    "Author": null,
-    "Direction": null,
-    "Excerpt": "par Alexandria Sage et Lisa Girion",
-    "Image": "http:\/\/fakehost\/img\/cha\/placeholders\/placeholder_1000x750.jpg",
-    "Title": "Les motivations du tueur de Las Vegas demeurent floues",
-    "SiteName": "Challenges"
+  "title": "Les motivations du tueur de Las Vegas demeurent floues",
+  "byline": null,
+  "dir": null,
+  "excerpt": "par Alexandria Sage et Lisa Girion",
+  "siteName": "Challenges",
+  "readerable": true
 }

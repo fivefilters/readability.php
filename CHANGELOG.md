@@ -1,6 +1,34 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [v4.0.0-beta.1](https://github.com/fivefilters/readability.php/releases/tag/v4.0.0-beta.1)
+
+Ground-up port from the latest Readability.js (v0.6.0) using Claude's Fable model. Uses PHP 8.4's new DOM API and native parser. See [UPGRADE.md](UPGRADE.md) for the full 3.x → 4.0 migration guide.
+
+### Changed
+- Requires PHP >= 8.4; parsing and serialization use `Dom\HTMLDocument` (the WHATWG-spec Lexbor parser bundled with PHP), replacing HTML5-PHP and the legacy libxml path
+- `parse()` now returns a readonly `Article` value object (`title`, `content`, `textContent`, `length`, `excerpt`, `byline`, `siteName`, `dir`, `lang`, `publishedTime`, `image`, `images`, `contentElement`). When no article content is found (where Readability.js returns null), the `Article` still carries the extracted title and metadata with null content — check `Article::hasContent()`. `ParseException` is thrown only for empty input or documents over `maxElemsToParse`
+- Options are passed directly to the `Readability` constructor as named arguments, like the options object in Readability.js (`new Readability(fixRelativeURLs: true)`), and are all optional; a readonly `Configuration` object taking the same named arguments can be passed instead. `maxTopCandidates` renamed to `nbTopCandidates` (matching Readability.js)
+- Article output is wrapped in `<div id="readability-page-1" class="page">`, as in Readability.js
+- Byline is always extracted into `Article::$byline`; the `articleByline` option becomes `keepInlineByline`, which only controls whether an inline byline stays in the content (default removes it, as in Readability.js)
+- Image extraction moved onto the result object: `getImage()`/`getImages()` become `$article->image` / `$article->images`
+- PSR-3 logging: pass a `LoggerInterface` as the `logger` option instead of `setLogger()`
+- Relative URL resolution now uses a real WHATWG URL parser — PHP 8.5's native `Uri\WhatWg\Url` when available, [rowbot/url](https://github.com/TRowbotham/URL-Parser) on PHP 8.4 — matching the `new URL()` behavior Readability.js relies on; replaces league/uri
+- Test corpus replaced with Mozilla's 130 test pages verbatim; content comparison ports Mozilla's structural DOM comparison
+
+### Added
+- Parity with Readability.js 0.6.0: `lang` and `publishedTime` output; `maxElemsToParse`, `classesToPreserve`, `allowedVideoRegex`, `linkDensityModifier` and `debug` options; aria-modal dialog removal; ad/loading-indicator stripping; parsely/`article:author`/`itemprop` metadata sources; JSON-LD `@graph`, `@context`-object and array handling; Unicode comma scoring; updated regexes (mathjax, bilibili, en/em-dash title separators)
+- `Readerable::isProbablyReaderable()`, a port of Readability-readerable.js
+- `parse()` accepts an already-parsed `Dom\HTMLDocument` as well as an HTML string
+- Cross-check harness (`test/tools/`) that diffs this port's output against Readability.js over the whole corpus
+- Static analysis with [Psalm](https://psalm.dev/) (`composer analyse`), run in CI alongside the test suite
+
+### Removed
+- HTML5-PHP dependency; `ext-xml` requirement
+- Options that existed as libxml workarounds: `parser`, `substituteEntities`, `normalizeEntities`, `summonCthulhu`
+- The custom DOM subclass layer (`src/Nodes/`) and its workarounds (attribute-based state, shifting-aware iteration)
+- The Docker-based local test setup (`docker-compose.yml`, `Makefile`, `docker/`); tests and static analysis run directly on PHP 8.4/8.5, locally and in CI
+
 ## [v3.3.3](https://github.com/fivefilters/readability.php/releases/tag/v3.3.3)
 - Fix type error - extends type support to add DOMProcessingInstruction in more method signatures (reported by @reinierkors)
 

@@ -1,8 +1,8 @@
 {
-    "Author": null,
-    "Direction": null,
-    "Excerpt": "",
-    "Image": null,
-    "Title": "Seattle Thunderbirds Hockey",
-    "SiteName": null
+  "title": "Seattle Thunderbirds Hockey",
+  "byline": null,
+  "dir": null,
+  "excerpt": null,
+  "siteName": null,
+  "readerable": true
 }

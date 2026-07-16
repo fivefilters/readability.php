@@ -1,8 +1,9 @@
 {
-    "Author": null,
-    "Direction": null,
-    "Excerpt": "Posted by kovarex, TOGos, Ernestas, Albert on 2019-02-15, all posts",
-    "Image": "http:\/\/www.factorio.com\/static\/img\/factorio-wheel.png",
-    "Title": "Friday Facts #282 - 0.17 in sight | Factorio",
-    "SiteName": "Factorio.com"
+  "title": "Friday Facts #282 - 0.17 in sight | Factorio",
+  "byline": null,
+  "dir": null,
+  "excerpt": "Posted by kovarex, TOGos, Ernestas, Albert on 2019-02-15, all posts",
+  "siteName": "Factorio.com",
+  "publishedTime": null,
+  "readerable": true
 }

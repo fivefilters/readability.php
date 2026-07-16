@@ -1,8 +1,9 @@
 {
-    "Author": null,
-    "Direction": null,
-    "Excerpt": "abc",
-    "Image": null,
-    "Title": "Replace javascript: links",
-    "SiteName": null
+  "title": "Replace javascript: links",
+  "byline": null,
+  "dir": null,
+  "excerpt": "abc",
+  "siteName": null,
+  "publishedTime": null,
+  "readerable": false
 }
