@@ -160,13 +160,13 @@ Toggles for internal Readability flags carried over from earlier versions (alway
 
 ## Upgrading from 3.x
 
-The 4.0 API is new: the parse result is a readonly `Article` value object instead of getters on a stateful instance, `Configuration` uses named constructor arguments instead of setters, and a few 3.x-only features (image extraction, PSR-3 logging, the libxml workaround options) are gone.
+The 4.0 API is new: the parse result is a readonly `Article` value object instead of getters on a stateful instance, `Configuration` uses named constructor arguments instead of setters, and a few 3.x-only features (libxml workaround options) are gone.
 
 **See [UPGRADE.md](UPGRADE.md)** for the full guide: before/after code, a mapping table for every 3.x method and option, replacement snippets for the removed features, and the behavior changes to be aware of.
 
 ## Limitations
 
-Websites that load their content through JavaScript (lazy loading, AJAX) will not have their content extracted, because JavaScript is not executed.
+Websites that load their content through JavaScript (lazy loading, AJAX) will not have their content extracted, because JavaScript is not executed. For such content you will need to grab the HTML via a headless browser first and then give it to Readability.
 
 ## Dependencies
 
