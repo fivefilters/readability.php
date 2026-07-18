@@ -1,7 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## [v4.0.0](https://github.com/fivefilters/readability.php/releases/tag/v4.0.0)
+
+First stable release of the 4.0 series — a ground-up rewrite. This release includes **all changes from [v4.0.0-beta.1](https://github.com/fivefilters/readability.php/releases/tag/v4.0.0-beta.1) below** (see [UPGRADE.md](UPGRADE.md) for the 3.x → 4.0 migration guide), plus the following changes since beta.1:
 
 ### Changed
 - Widened dependency constraints so the library co-installs with a broader range of applications: `psr/log` now accepts `^1.0 || ^2.0 || ^3.0` (the library only consumes the interface, so every major works) and `rowbot/url` now accepts `^3.1.7 || ^4.0` (older majors avoid rowbot/url 4.x's hard requirements on `psr/log ^3` and newer `brick/math`, both common sources of version conflicts). Note: rowbot/url 3.x emits PHP 8.4 implicit-nullable deprecation notices internally; it is only loaded on PHP 8.4 (PHP 8.5+ uses the native `Uri\WhatWg\Url`), and Composer still picks 4.x unless another dependency forces an older version
