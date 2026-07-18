@@ -6,7 +6,7 @@ PHP port of *Mozilla's* **[Readability.js](https://github.com/mozilla/readabilit
 
 ![Screenshot](https://raw.githubusercontent.com/fivefilters/readability.php/assets/screenshot.png)
 
-Version 4.0 is a ground-up rewrite, produced using [Claude](https://claude.com/claude-code) (Anthropic's AI coding tool), to bring the code in line with the latest version of Readability.js (v0.6.0, transcribed method-for-method) and to take advantage of the new, faster native HTML parser introduced in PHP 8.4 ([Lexbor, included in the DOM extension](https://blog.keyvan.net/p/parsing-html-with-php-84)) and the new WHATWG URL parser introduced in PHP 8.5. It parses HTML the way modern browsers do, needs no third-party HTML parsing library, and is tested against Mozilla's own test corpus.
+Version 4.0 is a ground-up rewrite, produced using Claude Code (Anthropic's AI coding tool), to bring the code in line with the latest version of Readability.js (v0.6.0, transcribed method-for-method) and to take advantage of the new, faster native HTML parser introduced in PHP 8.4 ([Lexbor, included in the DOM extension](https://blog.keyvan.net/p/parsing-html-with-php-84)) and the new WHATWG URL parser introduced in PHP 8.5. It parses HTML the way modern browsers do, needs no third-party HTML parsing library, and is tested against Mozilla's own test corpus.
 
 **Original Developer**: Andres Rey
 
@@ -20,9 +20,7 @@ PHP 8.4+, ext-dom, and ext-mbstring.
 
 First require the library using composer:
 
-`composer require "fivefilters/readability.php:^4.0@beta"`
-
-Version 4.0 is currently in beta, so the `@beta` stability flag is needed; once the stable release is out, `composer require "fivefilters/readability.php:^4.0"` will do.
+`composer require "fivefilters/readability.php:^4.0"`
 
 Then create a Readability instance and feed `parse()` your HTML. It returns an `Article` object:
 
