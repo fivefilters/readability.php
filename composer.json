@@ -30,8 +30,8 @@
         "php": ">=8.4",
         "ext-dom": "*",
         "ext-mbstring": "*",
-        "psr/log": "^2.0 || ^3.0",
-        "rowbot/url": "^4.1"
+        "psr/log": "^1.0 || ^2.0 || ^3.0",
+        "rowbot/url": "^3.1.7 || ^4.0"
     },
     "suggest": {
         "ext-uri": "Native WHATWG URL parsing, used automatically on PHP 8.5+ instead of rowbot/url"
