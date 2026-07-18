@@ -107,7 +107,8 @@ class PhpFeaturesTest extends TestCase
             /** @var list<string> */
             public array $messages = [];
 
-            public function log($level, string|\Stringable $message, array $context = []): void
+            // Untyped $level/$message keep this compatible with every psr/log major (v1 has no parameter types).
+            public function log($level, $message, array $context = []): void
             {
                 $this->messages[] = (string) $message;
             }
