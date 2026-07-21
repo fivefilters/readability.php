@@ -5,5 +5,7 @@
 /docker export-ignore
 /docker-compose.yml export-ignore
 
-test/* linguist-language=PHP
+# Exclude test files from GitHub's language statistics (** needed to match
+# nested files like test/test-pages/*/source.html, * stops at directories)
+/test/** linguist-vendored
 * text=auto eol=lf
