@@ -133,6 +133,43 @@ class ReadabilityTest extends TestCase
         $this->assertNull($article->dir);
     }
 
+    public function testMetadataOnlySkipsContentExtractionAndLeavesDocumentUntouched(): void
+    {
+        // Scripts, noscript images and extractable content: everything the
+        // normal parse would mutate or remove.
+        $html = <<<HTML
+        <html lang="fr"><head>
+        <title>Site Name - A Longer Article Title About Things</title>
+        <meta property="og:image" content="https://example.com/lead.jpg" />
+        <meta name="author" content="Jane Doe" />
+        <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","description":"A short description."}</script>
+        <script>var stripped = true;</script>
+        </head><body><article><p>
+        HTML . str_repeat('Long enough paragraph text. ', 30) . <<<HTML
+        </p><noscript><img src="https://example.com/noscript.jpg"></noscript></article></body></html>
+        HTML;
+        $document = \Dom\HTMLDocument::createFromString($html, LIBXML_NOERROR);
+        $before = $document->saveHtml();
+
+        $article = new Readability(metadataOnly: true)->parse($document);
+
+        // The read-only guarantee: the caller's document is untouched.
+        $this->assertSame($before, $document->saveHtml());
+
+        // No content extraction...
+        $this->assertFalse($article->hasContent());
+        $this->assertNull($article->content);
+        $this->assertNull($article->contentElement);
+
+        // ...but title and metadata are extracted as usual.
+        $this->assertSame('A Longer Article Title About Things', $article->title);
+        $this->assertSame('Jane Doe', $article->byline);
+        $this->assertSame('fr', $article->lang);
+        $this->assertSame('A short description.', $article->excerpt);
+        $this->assertSame('https://example.com/lead.jpg', $article->image);
+        $this->assertSame(['https://example.com/lead.jpg'], $article->images);
+    }
+
     public function testArticleWithContentReportsHasContent(): void
     {
         $article = new Readability()->parse(
@@ -142,6 +179,60 @@ class ReadabilityTest extends TestCase
         $this->assertTrue($article->hasContent());
         $this->assertNotNull($article->contentElement);
         $this->assertGreaterThan(0, $article->length);
+    }
+
+    public function testContentIsDerivedLazilyFromContentElementAndCached(): void
+    {
+        $article = new Readability()->parse(
+            '<html><body><article><p>' . str_repeat('Long enough paragraph text. ', 30) . '</p></article></body></html>'
+        );
+
+        // content/textContent/length are serialized from contentElement on
+        // first access, so a mutation made before that first read shows up...
+        $extra = $article->contentElement->ownerDocument->createElement('p');
+        $extra->textContent = 'LAZY-MARKER';
+        $article->contentElement->appendChild($extra);
+        $this->assertStringContainsString('LAZY-MARKER', $article->content);
+        $this->assertStringContainsString('LAZY-MARKER', $article->textContent);
+        $this->assertSame(mb_strlen($article->textContent), $article->length);
+
+        // ...and the first read is cached: later mutations are not reflected.
+        $article->contentElement->removeChild($extra);
+        $this->assertStringContainsString('LAZY-MARKER', $article->content);
+        $this->assertStringContainsString('LAZY-MARKER', $article->textContent);
+    }
+
+    public function testArticleSerializationIncludesLazyProperties(): void
+    {
+        $article = new Readability()->parse(
+            '<html><body><article><p>' . str_repeat('Long enough paragraph text. ', 30) . '</p></article></body></html>'
+        );
+
+        // Virtual (hooked) properties are invisible to json_encode() and
+        // var_dump(); jsonSerialize()/__debugInfo() reinstate them.
+        $encoded = json_decode(json_encode($article), true);
+        $this->assertSame($article->content, $encoded['content']);
+        $this->assertSame($article->textContent, $encoded['textContent']);
+        $this->assertSame($article->length, $encoded['length']);
+        $this->assertSame($article->images, $encoded['images']);
+        $this->assertSame($article->title, $encoded['title']);
+
+        ob_start();
+        var_dump($article);
+        $dump = ob_get_clean();
+        $this->assertStringContainsString('"textContent"', $dump);
+        $this->assertStringContainsString('Long enough paragraph text.', $dump);
+    }
+
+    public function testArticlePropertiesCannotBeWritten(): void
+    {
+        $article = new Readability()->parse(
+            '<html><body><article><p>' . str_repeat('Long enough paragraph text. ', 30) . '</p></article></body></html>'
+        );
+
+        $this->expectException(\Error::class);
+        /** @psalm-suppress InvalidPropertyAssignmentValue */
+        $article->content = 'nope';
     }
 
     public function testCustomAllowedVideoRegex(): void

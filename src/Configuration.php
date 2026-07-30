@@ -49,6 +49,16 @@ final class Configuration
          * removes it; readability.php 3.x kept it unless articleByline was set.
          */
         public readonly bool $keepInlineByline = false,
+        /**
+         * PHP-specific: extract only the title and metadata, skipping content
+         * extraction entirely. parse() then skips every stage that mutates
+         * the document (noscript image unwrapping, script removal, document
+         * prep, and the article grab itself), so a passed-in
+         * \Dom\HTMLDocument is guaranteed to be left unmodified. The
+         * returned Article has the content-derived properties set to null
+         * (hasContent() returns false), as when no content is found.
+         */
+        public readonly bool $metadataOnly = false,
         /** Internal flag toggles carried over from the previous major version (always on in JS). */
         public readonly bool $stripUnlikelyCandidates = true,
         public readonly bool $weightClasses = true,
