@@ -133,6 +133,43 @@ class ReadabilityTest extends TestCase
         $this->assertNull($article->dir);
     }
 
+    public function testMetadataOnlySkipsContentExtractionAndLeavesDocumentUntouched(): void
+    {
+        // Scripts, noscript images and extractable content: everything the
+        // normal parse would mutate or remove.
+        $html = <<<HTML
+        <html lang="fr"><head>
+        <title>Site Name - A Longer Article Title About Things</title>
+        <meta property="og:image" content="https://example.com/lead.jpg" />
+        <meta name="author" content="Jane Doe" />
+        <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","description":"A short description."}</script>
+        <script>var stripped = true;</script>
+        </head><body><article><p>
+        HTML . str_repeat('Long enough paragraph text. ', 30) . <<<HTML
+        </p><noscript><img src="https://example.com/noscript.jpg"></noscript></article></body></html>
+        HTML;
+        $document = \Dom\HTMLDocument::createFromString($html, LIBXML_NOERROR);
+        $before = $document->saveHtml();
+
+        $article = new Readability(metadataOnly: true)->parse($document);
+
+        // The read-only guarantee: the caller's document is untouched.
+        $this->assertSame($before, $document->saveHtml());
+
+        // No content extraction...
+        $this->assertFalse($article->hasContent());
+        $this->assertNull($article->content);
+        $this->assertNull($article->contentElement);
+
+        // ...but title and metadata are extracted as usual.
+        $this->assertSame('A Longer Article Title About Things', $article->title);
+        $this->assertSame('Jane Doe', $article->byline);
+        $this->assertSame('fr', $article->lang);
+        $this->assertSame('A short description.', $article->excerpt);
+        $this->assertSame('https://example.com/lead.jpg', $article->image);
+        $this->assertSame(['https://example.com/lead.jpg'], $article->images);
+    }
+
     public function testArticleWithContentReportsHasContent(): void
     {
         $article = new Readability()->parse(

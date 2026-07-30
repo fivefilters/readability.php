@@ -88,7 +88,7 @@ foreach ($article->contentElement->querySelectorAll('img[src]') as $img) {
 }
 ```
 
-`parse()` also accepts a `\Dom\HTMLDocument` directly (for example because you want to pre-process it). Note that a passed document is modified in place while the article is extracted.
+`parse()` also accepts a `\Dom\HTMLDocument` directly (for example because you want to pre-process it). Note that a passed document is modified in place while the article is extracted (unless the `metadataOnly` option is set, which guarantees a read-only pass).
 
 ### Checking if a page is readerable
 
@@ -151,6 +151,7 @@ PHP-specific options (a browser knows the page URL; this library must be told):
 - **originalURL**: default `null`, the URL the article was fetched from, used as the base for URL fixing. A `<base href>` in the document is honored too.
 - **logger**: default `null`, an optional PSR-3 `LoggerInterface`. When set, debug messages are also sent to it (independently of the `debug` flag, which only controls `error_log()`).
 - **keepInlineByline**: default `false`. By default an inline byline (e.g. a `<p class="byline">By Jane Doe</p>`) is removed from the content, as in Readability.js. Set this to `true` to keep it in the content; either way it is still extracted into `$article->byline`.
+- **metadataOnly**: default `false`. Extract only the title and metadata, skipping content extraction entirely — useful when you locate the article body yourself and only want Readability's title/metadata extraction. `parse()` then skips every stage that mutates the document, so a passed-in `\Dom\HTMLDocument` is guaranteed to be left unmodified (normally a passed document is modified in place). The returned `Article` has the content-derived properties set to `null`, as when no content is found (`hasContent()` returns `false`).
 
 Toggles for internal Readability flags carried over from earlier versions (always on in Readability.js):
 

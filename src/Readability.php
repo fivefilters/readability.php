@@ -118,7 +118,9 @@ final class Readability
      * Parse an HTML string and return the article. When no article content
      * is found (where Readability.js returns null), the returned Article
      * carries the extracted title and metadata with null content — see
-     * Article::hasContent().
+     * Article::hasContent(). The same shape is returned when the
+     * metadataOnly option is set, which also guarantees a passed-in
+     * document is not modified.
      *
      * @throws ParseException when the input is empty or the document exceeds
      *                        maxElemsToParse
@@ -159,16 +161,27 @@ final class Readability
                 }
             }
 
-            // Unwrap image from noscript
-            $this->unwrapNoscriptImages($document);
+            // PHP-specific: with metadataOnly, skip every stage that mutates
+            // the document — unwrapNoscriptImages, removeScripts, prepDocument
+            // and grabArticle — so the parse is guaranteed read-only on a
+            // passed-in document. Title and metadata extraction depend on none
+            // of them (JSON-LD is read before script removal anyway).
+            $metadataOnly = $this->configuration->metadataOnly;
+
+            if (!$metadataOnly) {
+                // Unwrap image from noscript
+                $this->unwrapNoscriptImages($document);
+            }
 
             // Extract JSON-LD metadata before removing scripts
             $jsonLd = $this->configuration->disableJSONLD ? [] : $this->getJSONLD($document);
 
-            // Remove script tags from the document.
-            $this->removeScripts($document);
+            if (!$metadataOnly) {
+                // Remove script tags from the document.
+                $this->removeScripts($document);
 
-            $this->prepDocument();
+                $this->prepDocument();
+            }
 
             $metadata = $this->getArticleMetadata($jsonLd);
             $this->metadata = $metadata;
@@ -184,7 +197,13 @@ final class Readability
                 $leadImage = $this->toAbsoluteURI($leadImage);
             }
 
-            $articleContent = $this->grabArticle();
+            if ($metadataOnly) {
+                // grabArticle is skipped; replicate its one read-only
+                // extraction, the article language from the root element.
+                $this->articleLang = $document->documentElement?->getAttribute('lang');
+            }
+
+            $articleContent = $metadataOnly ? null : $this->grabArticle();
             if (!$articleContent) {
                 // PHP-specific: where Readability.js returns a bare null and
                 // discards the title and metadata it had already extracted,
