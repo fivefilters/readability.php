@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+- `Article`'s content-derived properties (`content`, `textContent`, `length`, `images`) are now computed lazily from `contentElement` on first access (via property hooks) and cached, so callers that only use `contentElement`, `hasContent()` or the metadata no longer pay for serializing the article HTML and text on every parse. Reads are unchanged (same names, same types, same values); `hasContent()` now checks `contentElement`. Two edges to note: the `Article` constructor no longer takes `content`/`textContent`/`length`/`images` (it derives them from `contentElement`), and the lazy properties, being virtual, no longer appear in `json_encode()`/`get_object_vars()` output — read them explicitly if you serialize articles
+
 ## [v4.0.0](https://github.com/fivefilters/readability.php/releases/tag/v4.0.0)
 
 First stable release of the 4.0 series — a ground-up rewrite. This release includes **all changes from [v4.0.0-beta.1](https://github.com/fivefilters/readability.php/releases/tag/v4.0.0-beta.1) below** (see [UPGRADE.md](UPGRADE.md) for the 3.x → 4.0 migration guide), plus the following changes since beta.1:

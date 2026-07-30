@@ -195,14 +195,10 @@ final class Readability
                     byline: self::pick($metadata['byline'], $this->articleByline),
                     dir: $this->articleDir,
                     lang: self::pick($this->articleLang),
-                    content: null,
-                    textContent: null,
-                    length: null,
                     excerpt: self::pick($metadata['excerpt']),
                     siteName: self::pick($metadata['siteName'], $this->articleSiteName),
                     publishedTime: self::pick($metadata['publishedTime']),
                     image: $leadImage,
-                    images: $leadImage !== null ? [$leadImage] : [],
                     contentElement: null,
                 );
             }
@@ -221,23 +217,15 @@ final class Readability
                 }
             }
 
-            $textContent = $articleContent->textContent;
-
-            $images = $this->collectImages($articleContent, $leadImage);
-
             return new Article(
                 title: $this->articleTitle ?? '',
                 byline: self::pick($metadata['byline'], $this->articleByline),
                 dir: $this->articleDir,
                 lang: self::pick($this->articleLang),
-                content: $articleContent->innerHTML,
-                textContent: $textContent,
-                length: mb_strlen($textContent),
                 excerpt: self::pick($metadata['excerpt']),
                 siteName: self::pick($metadata['siteName'], $this->articleSiteName),
                 publishedTime: self::pick($metadata['publishedTime']),
                 image: $leadImage,
-                images: $images,
                 contentElement: $articleContent,
             );
         } finally {
@@ -467,29 +455,6 @@ final class Readability
             }
         }
         return null;
-    }
-
-    /**
-     * PHP-specific: the list of image URLs for the article — the lead image
-     * (if any) followed by every content <img> src, de-duplicated. Content
-     * srcs are already absolute here when fixRelativeURLs is enabled (see
-     * fixRelativeUris); the lead image is absolutized by the caller.
-     *
-     * @return list<string>
-     */
-    private function collectImages(\Dom\Element $content, ?string $leadImage): array
-    {
-        $urls = [];
-        if ($leadImage !== null) {
-            $urls[] = $leadImage;
-        }
-        foreach ($this->getAllNodesWithTag($content, ['img']) as $img) {
-            $src = (string) $img->getAttribute('src');
-            if ($src !== '') {
-                $urls[] = $src;
-            }
-        }
-        return array_values(array_unique($urls));
     }
 
     /** The toAbsoluteURI closure inside _fixRelativeUris. */

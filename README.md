@@ -49,7 +49,7 @@ try {
 
 When no article content can be found — the case where Readability.js returns `null` — `parse()` still returns an `Article` carrying whatever was extracted before content detection failed (`title`, `byline`, `dir`, `lang`, `excerpt`, `siteName`, `publishedTime`, `image`), with the content-derived properties (`content`, `textContent`, `length`, `contentElement`) set to `null`. `Article::hasContent()` tells the two apart. `ParseException` is reserved for the cases where parsing cannot be attempted at all: empty input, or a document exceeding `maxElemsToParse` (where Readability.js throws too).
 
-`Article` is a readonly value object mirroring what Readability.js returns:
+`Article` is an immutable value object mirroring what Readability.js returns:
 
 ```php
 $article->title;         // string – article title
@@ -69,6 +69,8 @@ echo $article;           // same as $article->content
 ```
 
 `image` and `images` are a PHP-specific addition (Readability.js has no image extraction). When `fixRelativeURLs` is enabled they are returned as absolute URLs.
+
+The content-derived properties (`content`, `textContent`, `length`, `images`) are computed from `contentElement` on first access and then cached, so callers that only work with the DOM element (or only check `hasContent()` and the metadata) never pay for serializing the article HTML and text. A consequence of the caching: if you mutate `contentElement`, do it before reading `content`/`textContent` — mutations made after the first read are not reflected.
 
 So for finer control over the output, wrap the properties in your own HTML:
 

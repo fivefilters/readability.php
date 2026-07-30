@@ -144,6 +144,38 @@ class ReadabilityTest extends TestCase
         $this->assertGreaterThan(0, $article->length);
     }
 
+    public function testContentIsDerivedLazilyFromContentElementAndCached(): void
+    {
+        $article = new Readability()->parse(
+            '<html><body><article><p>' . str_repeat('Long enough paragraph text. ', 30) . '</p></article></body></html>'
+        );
+
+        // content/textContent/length are serialized from contentElement on
+        // first access, so a mutation made before that first read shows up...
+        $extra = $article->contentElement->ownerDocument->createElement('p');
+        $extra->textContent = 'LAZY-MARKER';
+        $article->contentElement->appendChild($extra);
+        $this->assertStringContainsString('LAZY-MARKER', $article->content);
+        $this->assertStringContainsString('LAZY-MARKER', $article->textContent);
+        $this->assertSame(mb_strlen($article->textContent), $article->length);
+
+        // ...and the first read is cached: later mutations are not reflected.
+        $article->contentElement->removeChild($extra);
+        $this->assertStringContainsString('LAZY-MARKER', $article->content);
+        $this->assertStringContainsString('LAZY-MARKER', $article->textContent);
+    }
+
+    public function testArticlePropertiesCannotBeWritten(): void
+    {
+        $article = new Readability()->parse(
+            '<html><body><article><p>' . str_repeat('Long enough paragraph text. ', 30) . '</p></article></body></html>'
+        );
+
+        $this->expectException(\Error::class);
+        /** @psalm-suppress InvalidPropertyAssignmentValue */
+        $article->content = 'nope';
+    }
+
     public function testCustomAllowedVideoRegex(): void
     {
         $source = '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc mollis leo lacus, vitae semper nisl ullamcorper ut.</p>'
