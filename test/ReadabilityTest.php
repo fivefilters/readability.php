@@ -165,6 +165,28 @@ class ReadabilityTest extends TestCase
         $this->assertStringContainsString('LAZY-MARKER', $article->textContent);
     }
 
+    public function testArticleSerializationIncludesLazyProperties(): void
+    {
+        $article = new Readability()->parse(
+            '<html><body><article><p>' . str_repeat('Long enough paragraph text. ', 30) . '</p></article></body></html>'
+        );
+
+        // Virtual (hooked) properties are invisible to json_encode() and
+        // var_dump(); jsonSerialize()/__debugInfo() reinstate them.
+        $encoded = json_decode(json_encode($article), true);
+        $this->assertSame($article->content, $encoded['content']);
+        $this->assertSame($article->textContent, $encoded['textContent']);
+        $this->assertSame($article->length, $encoded['length']);
+        $this->assertSame($article->images, $encoded['images']);
+        $this->assertSame($article->title, $encoded['title']);
+
+        ob_start();
+        var_dump($article);
+        $dump = ob_get_clean();
+        $this->assertStringContainsString('"textContent"', $dump);
+        $this->assertStringContainsString('Long enough paragraph text.', $dump);
+    }
+
     public function testArticlePropertiesCannotBeWritten(): void
     {
         $article = new Readability()->parse(

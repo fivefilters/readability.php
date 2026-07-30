@@ -20,7 +20,7 @@ namespace fivefilters\Readability;
  * contentElement after reading one of them will not be reflected in
  * subsequent reads.
  */
-final class Article
+final class Article implements \JsonSerializable
 {
     /** HTML string of the processed article content; null when no content was found. */
     public ?string $content {
@@ -108,6 +108,42 @@ final class Article
     public function __toString(): string
     {
         return $this->content ?? '';
+    }
+
+    /**
+     * json_encode() and var_dump() only see real properties, not virtual
+     * (hooked) ones, which would silently drop content, textContent, length
+     * and images. These two methods spell out the full property list, in the
+     * order the eager implementation used, so the output is unchanged. Note
+     * that both therefore trigger the serialization the lazy properties
+     * otherwise avoid.
+     *
+     * @return array<string, mixed>
+     */
+    #[\Override]
+    public function jsonSerialize(): array
+    {
+        return $this->__debugInfo();
+    }
+
+    /** @return array<string, mixed> */
+    public function __debugInfo(): array
+    {
+        return [
+            'title' => $this->title,
+            'byline' => $this->byline,
+            'dir' => $this->dir,
+            'lang' => $this->lang,
+            'content' => $this->content,
+            'textContent' => $this->textContent,
+            'length' => $this->length,
+            'excerpt' => $this->excerpt,
+            'siteName' => $this->siteName,
+            'publishedTime' => $this->publishedTime,
+            'image' => $this->image,
+            'images' => $this->images,
+            'contentElement' => $this->contentElement,
+        ];
     }
 
     /** @return list<string> */
